@@ -1,0 +1,16 @@
+# Secrets and local data — never commit
+.env
+*.sqlite
+legacy/app/data/
+**/SUPERADMIN-CREDENTIALS.md
+**/LOCAL-CREDENTIALS.md
+
+# Dependencies / build output (each app also has its own .gitignore)
+node_modules/
+vendor/
+dist/
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store

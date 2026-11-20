@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: trendy-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: trendy
+      POSTGRES_USER: trendy
+      POSTGRES_PASSWORD: trendy_local_dev
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - trendy_pgdata:/var/lib/postgresql/data
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trendy -d trendy"]
+      interval: 5s
+      retries: 10
+
+volumes:
+  trendy_pgdata:

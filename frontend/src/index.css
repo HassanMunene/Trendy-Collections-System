@@ -1,0 +1,53 @@
+@import 'tailwindcss';
+
+/* Trendy Collections theme (carried over from the pilot's pink/plum palette). */
+@theme {
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: Georgia, 'Times New Roman', serif;
+
+  --color-plum: #43253a;
+  --color-plum-700: #5c424c;
+  --color-plum-300: #a87d8e;
+  --color-rose: #a53e68;
+  --color-rose-dark: #8a2f54;
+  --color-blush-50: #fbf8f9;
+  --color-blush-100: #f6f2f4;
+  --color-blush-200: #f1e8ec;
+  --color-blush-300: #e8d6de;
+  --color-ink: #301e25;
+  --color-ink-muted: #6f5d65;
+  --color-ink-faint: #a3939a;
+  --color-line: #d9cad0;
+  --color-line-soft: #ebe2e6;
+  --color-danger: #a23b2c;
+  --color-danger-soft: #fbeceb;
+  --color-success: #2f6b45;
+  --color-success-soft: #e6f2ea;
+
+  --shadow-card: 0 2px 12px #36172309;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply min-w-80 bg-blush-100 font-sans text-ink antialiased;
+  }
+  :focus-visible {
+    outline: 3px solid #e9a5be;
+    outline-offset: 2px;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

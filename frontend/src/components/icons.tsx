@@ -180,6 +180,21 @@ export const TruckIcon = (p: IconProps) => (
     </Svg>
 )
 
+export const BanknoteIcon = (p: IconProps) => (
+    <Svg {...p}>
+        <rect x="2.5" y="6" width="19" height="12" rx="2" />
+        <circle cx="12" cy="12" r="2.5" />
+        <path d="M6 9.5v5M18 9.5v5" />
+    </Svg>
+)
+
+export const TrendingUpIcon = (p: IconProps) => (
+    <Svg {...p}>
+        <path d="m3 16 5-5 4 4 7-8" />
+        <path d="M14 7h5v5" />
+    </Svg>
+)
+
 export const CheckCircleIcon = (p: IconProps) => (
     <Svg {...p}>
         <circle cx="12" cy="12" r="9" />

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useSearchParams } from 'react-router'
 import { useIdleLogout } from '../auth/useIdleLogout'
 import { useLivePermissions } from '../auth/useLivePermissions'
@@ -8,6 +9,7 @@ import { cx } from '../lib/cx'
 import { ReceiveChoiceDrawer } from './ReceiveChoiceDrawer'
 import { ReceiveRollDrawer } from './ReceiveRollDrawer'
 import { StockItemDrawer } from './StockItemDrawer'
+import { UserMenuDialog } from './UserMenuDialog'
 
 interface NavItem {
     to: string
@@ -35,6 +37,7 @@ export function AppShell() {
     const canViewAudit = useCan('view_audit')
     const [params, setParams] = useSearchParams()
     const { pathname } = useLocation()
+    const [userMenuOpen, setUserMenuOpen] = useState(false)
 
     // The receive form lives in a drawer opened from anywhere via ?receive=1.
     const openReceive = () => {
@@ -110,16 +113,22 @@ export function AppShell() {
                         ),
                     )}
                 </nav>
-                <Link
-                    to="/account"
-                    className={cx('mt-auto flex items-center gap-2.5 rounded-lg border-t border-white/15 px-2 pt-4 text-sm transition hover:opacity-90', focusRingLight)}
+                <button
+                    type="button"
+                    onClick={() => setUserMenuOpen(true)}
+                    aria-haspopup="dialog"
+                    aria-expanded={userMenuOpen}
+                    className={cx(
+                        'mt-auto flex w-full items-center gap-2.5 rounded-lg border-t border-white/15 px-2 pt-4 text-left text-sm transition hover:opacity-90',
+                        focusRingLight,
+                    )}
                 >
                     <Avatar name={me.name} url={me.avatar_url} size="xs" />
                     <span className="min-w-0">
                         <span className="block truncate font-semibold text-white">{me.name}</span>
                         <span className="block truncate text-blush-300">{me.is_superadmin ? 'Superadmin' : me.role_label}</span>
                     </span>
-                </Link>
+                </button>
             </aside>
 
             <div className="min-w-0">
@@ -147,13 +156,16 @@ export function AppShell() {
                             </button>
                         )}
 
-                        <Link
-                            to="/account"
-                            aria-label="My account"
+                        <button
+                            type="button"
+                            onClick={() => setUserMenuOpen(true)}
+                            aria-label="Account menu"
+                            aria-haspopup="dialog"
+                            aria-expanded={userMenuOpen}
                             className={cx('-mr-1 grid size-11 shrink-0 place-items-center rounded-full transition hover:opacity-90 md:hidden', focusRing)}
                         >
-                            <Avatar name={me.name} url={me.avatar_url} size="xs" eager className="ring-line-soft" />
-                        </Link>
+                            <Avatar name={me.name} url={me.avatar_url} size="md" eager className="ring-line-soft" />
+                        </button>
                     </div>
                 </header>
 
@@ -199,6 +211,8 @@ export function AppShell() {
             )}
             {params.get('receive') === 'roll' && <ReceiveRollDrawer onClose={closeReceive} presetFabricId={params.get('receive_fabric') ?? ''} />}
             {params.get('receive') === 'item' && <StockItemDrawer onClose={closeReceive} />}
+
+            <UserMenuDialog open={userMenuOpen} onClose={() => setUserMenuOpen(false)} />
         </div>
     )
 }

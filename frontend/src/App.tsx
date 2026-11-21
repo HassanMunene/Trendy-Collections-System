@@ -8,6 +8,7 @@ import { ME_KEY, useMe } from './auth/useMe'
 import { AppShell } from './components/AppShell'
 import { ErrorNotice, Loading } from './components/ui'
 import { AccountPage } from './pages/AccountPage'
+import { AuditPage } from './pages/AuditPage'
 import { ChangePasswordPage } from './pages/ChangePasswordPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { FabricFormPage } from './pages/FabricFormPage'
@@ -18,6 +19,7 @@ import { RollDetailPage } from './pages/RollDetailPage'
 import { RollsPage } from './pages/RollsPage'
 import { StaffPage } from './pages/StaffPage'
 import { StockPage } from './pages/StockPage'
+import { SuppliersPage } from './pages/SuppliersPage'
 
 /** Signed-in area. Sends guests to /login and temporary-password users to set their own. */
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -80,11 +82,7 @@ const router = createBrowserRouter([
                 ),
             },
             {
-                element: (
-                    <RequireAuth>
-                        <AppShell />
-                    </RequireAuth>
-                ),
+                element: ( <RequireAuth><AppShell /></RequireAuth>),
                 children: [
                     { index: true, element: <DashboardPage /> },
                     { path: 'rolls', element: <RollsPage /> },
@@ -99,6 +97,14 @@ const router = createBrowserRouter([
                     },
                     { path: 'rolls/:id', element: <RollDetailPage /> },
                     { path: 'stock', element: <StockPage /> },
+                    {
+                        path: 'suppliers',
+                        element: (
+                            <RequirePermission permission="manage_catalogue">
+                                <SuppliersPage />
+                            </RequirePermission>
+                        ),
+                    },
                     { path: 'fabrics', element: <FabricsPage /> },
                     {
                         // Creation happens in a drawer on the list page.
@@ -115,6 +121,14 @@ const router = createBrowserRouter([
                         element: (
                             <RequirePermission permission="manage_staff">
                                 <StaffPage />
+                            </RequirePermission>
+                        ),
+                    },
+                    {
+                        path: 'audit',
+                        element: (
+                            <RequirePermission permission="view_audit">
+                                <AuditPage />
                             </RequirePermission>
                         ),
                     },

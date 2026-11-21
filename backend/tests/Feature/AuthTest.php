@@ -22,6 +22,17 @@ class AuthTest extends TestCase
         $this->spa()->getJson('/api/me')->assertOk()->assertJsonPath('data.role', 'tailor');
     }
 
+    public function test_me_reports_the_idle_session_lifetime(): void
+    {
+        $user = $this->userWith(Role::Cashier);
+
+        $this->spa()->actingAs($user)->getJson('/api/me')
+            ->assertOk()
+            ->assertJsonPath('data.session_lifetime_seconds', config('session.lifetime') * 60);
+
+        $this->assertSame(12 * 60 * 60, config('session.lifetime') * 60);
+    }
+
     public function test_staff_can_sign_in_with_a_local_phone_number(): void
     {
         $this->userWith(Role::Cashier, ['phone' => '254712345678', 'password' => 'secret-123']);

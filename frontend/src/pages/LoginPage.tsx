@@ -4,7 +4,7 @@ import { toProblem, type ApiProblem } from '../api/client'
 import { api } from '../api/endpoints'
 import { useMe, useSetMe } from '../auth/useMe'
 import { Brand } from '../components/AppShell'
-import { Button, ErrorNotice, Field, Input } from '../components/ui'
+import { Button, ErrorNotice, Field, Input, Notice } from '../components/ui'
 
 export function LoginPage() {
   const { data: me } = useMe()
@@ -15,6 +15,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [problem, setProblem] = useState<ApiProblem | null>(null)
+  const idle = Boolean((location.state as { idle?: boolean } | null)?.idle)
 
   if (me) return <Navigate to="/" replace />
 
@@ -49,6 +50,12 @@ export function LoginPage() {
           </div>
           <h2 className="font-display text-3xl text-plum">Sign in</h2>
           <p className="mt-1 mb-6 text-sm text-ink-muted">Use your username or phone number.</p>
+
+          {idle && (
+            <div className="mb-5">
+              <Notice tone="warn">You were signed out after 12 hours without activity. Sign in to continue where you left off.</Notice>
+            </div>
+          )}
 
           <div className="grid gap-4">
             <Field label="Username or phone" error={problem?.fields.login}>

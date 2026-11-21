@@ -2,8 +2,9 @@
 
 namespace App\Providers;
 
-use App\Enums\Role;
 use App\Models\User;
+use App\Support\Permission;
+use App\Support\RolePermissions;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -24,14 +25,15 @@ class AppServiceProvider extends ServiceProvider
         Model::shouldBeStrict(! $this->app->isProduction());
 
         /*
-         * Who may do what. Everyone signed in can view stock.
-         * Keep this list in sync with frontend/src/auth/permissions.ts.
+         * Who may do what. Owners have everything; other roles get what the owner
+         * ticks on the Users & roles screen (role_permissions table).
          */
-        Gate::define('manage-staff', fn (User $u) => $u->hasRole(Role::Owner));
-        Gate::define('manage-catalogue', fn (User $u) => $u->isOwnerOrManager());
-        Gate::define('receive-stock', fn (User $u) => $u->isOwnerOrManager());
-        Gate::define('adjust-stock', fn (User $u) => $u->isOwnerOrManager());
-        Gate::define('view-costs', fn (User $u) => $u->isOwnerOrManager());
+        Gate::define('manage-staff', fn (User $u) => RolePermissions::allows($u, Permission::MANAGE_STAFF));
+        Gate::define('manage-catalogue', fn (User $u) => RolePermissions::allows($u, Permission::MANAGE_CATALOGUE));
+        Gate::define('receive-stock', fn (User $u) => RolePermissions::allows($u, Permission::RECEIVE_STOCK));
+        Gate::define('adjust-stock', fn (User $u) => RolePermissions::allows($u, Permission::ADJUST_STOCK));
+        Gate::define('view-costs', fn (User $u) => RolePermissions::allows($u, Permission::VIEW_COSTS));
+        Gate::define('view-audit', fn (User $u) => RolePermissions::allows($u, Permission::VIEW_AUDIT));
 
         RateLimiter::for('login', function (Request $request) {
             $login = mb_strtolower((string) $request->input('login'));

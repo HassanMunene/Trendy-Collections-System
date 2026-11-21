@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\User;
+use App\Support\RoleCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Gate;
@@ -19,7 +20,8 @@ class UserResource extends JsonResource
             'username' => $this->username,
             'phone' => $this->phone,
             'avatar_url' => $this->avatar_path ? Storage::disk('public')->url($this->avatar_path) : null,
-            'role' => $this->role->value,
+            'role' => $this->role,
+            'role_label' => RoleCatalog::label($this->role),
             'is_superadmin' => $this->is_superadmin,
             'active' => $this->active,
             'must_change_password' => $this->must_change_password,
@@ -32,12 +34,15 @@ class UserResource extends JsonResource
     public static function me(User $user): array
     {
         return (new self($user))->resolve() + [
+            // The React app logs itself out after this much inactivity, in step with the server.
+            'session_lifetime_seconds' => ((int) config('session.lifetime')) * 60,
             'permissions' => [
                 'manage_staff' => Gate::forUser($user)->allows('manage-staff'),
                 'manage_catalogue' => Gate::forUser($user)->allows('manage-catalogue'),
                 'receive_stock' => Gate::forUser($user)->allows('receive-stock'),
                 'adjust_stock' => Gate::forUser($user)->allows('adjust-stock'),
                 'view_costs' => Gate::forUser($user)->allows('view-costs'),
+                'view_audit' => Gate::forUser($user)->allows('view-audit'),
             ],
         ];
     }

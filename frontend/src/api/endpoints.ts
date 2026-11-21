@@ -1,6 +1,7 @@
 import { http } from './client'
 import type {
     Adjustment,
+    AuditEvent,
     Dashboard,
     Fabric,
     Lookups,
@@ -8,14 +9,26 @@ import type {
     Me,
     Movement,
     Paginated,
+    RoleOption,
+    RolePermissionRole,
+    RolePermissionsData,
     Roll,
     StaffUser,
     StockItem,
+    Supplier,
     StockItemMovement,
     Term,
 } from './types'
 
 const unwrap = <T>(p: Promise<{ data: { data: T } }>) => p.then((r) => r.data.data)
+
+interface SupplierBody {
+    name: string
+    phone: string
+    building?: string
+    stall?: string
+    notes?: string
+}
 
 export const api = {
     // Auth
@@ -41,9 +54,32 @@ export const api = {
         unwrap<StaffUser>(http.post('/staff', body)),
     updateStaff: (id: number, body: { name: string; username: string; phone: string; role: string }) =>
         unwrap<StaffUser>(http.patch(`/staff/${id}`, body)),
-    resetStaffPassword: (id: number) =>
-        unwrap<{ temporary_password: string }>(http.post(`/staff/${id}/reset-password`)),
+    resetStaffPassword: (id: number, body: { password: string; password_confirmation: string }) =>
+        unwrap<StaffUser>(http.post(`/staff/${id}/reset-password`, body)),
     setStaffActive: (id: number, active: boolean) => unwrap<StaffUser>(http.post(`/staff/${id}/active`, { active })),
+
+    // Live permission check (every signed-in account)
+    permissionFingerprint: () => unwrap<{ fingerprint: string }>(http.get('/session/permissions')),
+
+    // Roles & permissions (owner only)
+    roles: () => unwrap<RoleOption[]>(http.get('/roles')),
+    createRole: (body: { label: string; description: string; permissions: string[] }) =>
+        unwrap<RolePermissionRole>(http.post('/roles', body)),
+    updateRole: (roleKey: string, body: { label: string; description: string }) =>
+        unwrap<RolePermissionRole>(http.patch(`/roles/${roleKey}`, body)),
+    deleteRole: (roleKey: string) => http.delete(`/roles/${roleKey}`),
+    rolePermissions: () => unwrap<RolePermissionsData>(http.get('/role-permissions')),
+    updateRolePermissions: (roleKey: string, permissions: string[]) =>
+        unwrap<RolePermissionRole>(http.put(`/role-permissions/${roleKey}`, { permissions })),
+
+    // Audit trail (owner only)
+    auditEvents: (params: Record<string, string | number | undefined> = {}) =>
+        http.get<Paginated<AuditEvent>>('/audit-events', { params }).then((r) => r.data),
+
+    // Suppliers
+    suppliers: () => unwrap<Supplier[]>(http.get('/suppliers')),
+    createSupplier: (body: SupplierBody) => unwrap<Supplier>(http.post('/suppliers', body)),
+    updateSupplier: (id: number, body: SupplierBody) => unwrap<Supplier>(http.patch(`/suppliers/${id}`, body)),
 
     // Catalogue
     lookups: () => unwrap<Lookups>(http.get('/lookups')),

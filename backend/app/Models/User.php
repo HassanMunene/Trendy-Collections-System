@@ -31,7 +31,6 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'role' => Role::class,
             'is_superadmin' => 'boolean',
             'active' => 'boolean',
             'must_change_password' => 'boolean',
@@ -40,9 +39,20 @@ class User extends Authenticatable
         ];
     }
 
-    public function hasRole(Role ...$roles): bool
+    public function hasRole(Role|string ...$roles): bool
     {
-        return in_array($this->role, $roles, true);
+        foreach ($roles as $role) {
+            if ($this->role === ($role instanceof Role ? $role->value : $role)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function isOwner(): bool
+    {
+        return $this->hasRole(Role::Owner);
     }
 
     public function isOwnerOrManager(): bool

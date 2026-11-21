@@ -61,7 +61,7 @@ class StaffTest extends TestCase
             'name' => $owner->name, 'username' => $owner->username, 'role' => 'manager',
         ])->assertStatus(422)->assertJsonValidationErrors('role');
 
-        $this->assertSame(Role::Owner, $owner->fresh()->role);
+        $this->assertSame(Role::Owner->value, $owner->fresh()->role);
     }
 
     public function test_switching_off_staff_and_reset_password(): void
@@ -72,10 +72,36 @@ class StaffTest extends TestCase
         $this->spa()->actingAs($owner)->postJson("/api/staff/{$cashier->id}/active", ['active' => false])
             ->assertOk()->assertJsonPath('data.active', false);
 
-        $temp = $this->spa()->actingAs($owner)->postJson("/api/staff/{$cashier->id}/reset-password")
-            ->assertOk()->json('data.temporary_password');
-        $this->assertTrue(Hash::check($temp, $cashier->fresh()->password));
+        $this->spa()->actingAs($owner)->postJson("/api/staff/{$cashier->id}/reset-password", [
+            'password' => 'new-pass-123', 'password_confirmation' => 'new-pass-123',
+        ])->assertOk()->assertJsonPath('data.must_change_password', true);
+
+        $this->assertTrue(Hash::check('new-pass-123', $cashier->fresh()->password));
         $this->assertTrue($cashier->fresh()->must_change_password);
+    }
+
+    public function test_reset_password_needs_a_confirmed_password_and_is_not_for_yourself(): void
+    {
+        $owner = $this->userWith(Role::Owner);
+        $cashier = $this->userWith(Role::Cashier);
+
+        $this->spa()->actingAs($owner)->postJson("/api/staff/{$cashier->id}/reset-password", [
+            'password' => 'new-pass-123', 'password_confirmation' => 'different-123',
+        ])->assertStatus(422)->assertJsonValidationErrors('password');
+
+        $this->spa()->actingAs($owner)->postJson("/api/staff/{$owner->id}/reset-password", [
+            'password' => 'new-pass-123', 'password_confirmation' => 'new-pass-123',
+        ])->assertStatus(422)->assertJsonValidationErrors('password');
+    }
+
+    public function test_superadmin_account_cannot_be_switched_off_even_by_itself(): void
+    {
+        $super = User::factory()->superadmin()->create();
+
+        $this->spa()->actingAs($super)->postJson("/api/staff/{$super->id}/active", ['active' => false])
+            ->assertStatus(422)->assertJsonValidationErrors('active');
+
+        $this->assertTrue($super->fresh()->active);
     }
 
     public function test_ordinary_owner_cannot_change_the_superadmin(): void

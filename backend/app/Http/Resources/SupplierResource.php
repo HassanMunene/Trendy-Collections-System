@@ -17,6 +17,9 @@ class SupplierResource extends JsonResource
             'phone' => $this->phone,
             'building' => $this->building,
             'stall' => $this->stall,
+            'notes' => $this->notes,
+            'active' => $this->active,
+            'created_at' => $this->created_at?->toIso8601String(),
         ];
     }
 }

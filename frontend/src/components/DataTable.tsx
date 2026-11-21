@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react'
+import { Fragment, useEffect, useId, useRef, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react'
 import { cx } from '../lib/cx'
 import { InboxIcon, SearchIcon, XMarkIcon } from './icons'
 import { Pagination } from './Pagination'
@@ -18,6 +18,11 @@ export interface DataTableColumn<T> {
   noWrap?: boolean
   headerClassName?: string
   cellClassName?: string
+  /**
+   * How this column appears in the phone/tablet card view (below 768px).
+   * The first visible column is the card title by default; `actions` moves to the card footer.
+   */
+  mobile?: 'title' | 'detail' | 'actions' | 'hidden'
 }
 
 export interface DataTableSelection<T> {
@@ -54,6 +59,8 @@ export interface DataTableProps<T> {
   tableClassName?: string
   className?: string
   showFooter?: boolean
+  /** Cards below 768px (default) or the same scrolling table everywhere. */
+  mobileView?: 'cards' | 'scroll'
 }
 
 function SelectPageCheckbox({ checked, indeterminate, onChange, label }: { checked: boolean; indeterminate: boolean; onChange: () => void; label: string }) {
@@ -105,6 +112,7 @@ export function DataTable<T>({
   tableClassName = '',
   className = '',
   showFooter,
+  mobileView = 'cards',
 }: DataTableProps<T>) {
   const titleId = useId()
   const safeData = Array.isArray(data) ? data : []
@@ -138,15 +146,35 @@ export function DataTable<T>({
     pageKeys.forEach((key) => (allPageSelected ? next.delete(key) : next.add(key)))
     changeSelection([...next])
   }
-  const handleRowClick = (event: MouseEvent<HTMLTableRowElement>, row: T) => {
+  const handleRowClick = (event: MouseEvent<HTMLElement>, row: T) => {
     if (!onRowClick || (event.target as HTMLElement | null)?.closest?.(interactiveSelector)) return
     onRowClick(row)
   }
-  const handleRowKeyDown = (event: KeyboardEvent<HTMLTableRowElement>, row: T) => {
+  const handleRowKeyDown = (event: KeyboardEvent<HTMLElement>, row: T) => {
     if (!onRowClick || event.target !== event.currentTarget || !['Enter', ' '].includes(event.key)) return
     event.preventDefault()
     onRowClick(row)
   }
+
+  const cellValue = (col: DataTableColumn<T>, row: T, index: number) =>
+    col.render ? col.render(row, index) : col.accessor ? col.accessor(row, index) : null
+
+  const isActions = (col: DataTableColumn<T>) => col.mobile === 'actions' || col.key === 'actions'
+  const mobileTitle =
+    columns.find((col) => col.mobile === 'title') ?? columns.find((col) => !isActions(col) && col.mobile !== 'hidden')
+  const mobileDetails = columns.filter(
+    (col) => col !== mobileTitle && !isActions(col) && col.mobile !== 'hidden',
+  )
+  const mobileActions = columns.filter(isActions)
+
+  const emptyState = emptyContent || (
+    <div className="flex flex-col items-center gap-2 text-center">
+      <span className="grid size-12 place-items-center rounded-full bg-blush-200 text-rose">
+        <InboxIcon className="size-6" />
+      </span>
+      <span className="text-sm font-semibold text-plum">{emptyMessage}</span>
+    </div>
+  )
 
   return (
     <section
@@ -211,7 +239,8 @@ export function DataTable<T>({
         </div>
       )}
 
-      <div className="overflow-x-auto">
+      <div className={cx(mobileView === 'cards' && 'hidden md:block')}>
+        <div className="overflow-x-auto">
         <table className={cx('w-full border-collapse text-left text-sm', tableClassName)} aria-labelledby={title ? titleId : undefined} aria-label={title ? undefined : 'Data table'}>
           <thead className="bg-blush-100/70 text-[11px] uppercase tracking-wider text-ink-muted">
             <tr>
@@ -288,7 +317,7 @@ export function DataTable<T>({
                           col.cellClassName,
                         )}
                       >
-                        {col.render ? col.render(row, rowIndex) : col.accessor ? col.accessor(row, rowIndex) : null}
+                        {cellValue(col, row, rowIndex)}
                       </td>
                     ))}
                   </tr>
@@ -297,20 +326,84 @@ export function DataTable<T>({
             ) : (
               <tr>
                 <td colSpan={columnCount} className="px-5 py-16">
-                  {emptyContent || (
-                    <div className="flex flex-col items-center gap-2 text-center">
-                      <span className="grid size-12 place-items-center rounded-full bg-blush-200 text-rose">
-                        <InboxIcon className="size-6" />
-                      </span>
-                      <span className="text-sm font-semibold text-plum">{emptyMessage}</span>
-                    </div>
-                  )}
+                  {emptyState}
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+        </div>
       </div>
+
+      {mobileView === 'cards' && (
+        <div className="md:hidden">
+          {isLoading ? (
+            <div className="px-4 py-14 text-center">
+              <span role="status" className="inline-flex items-center gap-3 text-sm text-ink-muted">
+                <span className="size-5 animate-spin rounded-full border-2 border-rose border-t-transparent" />
+                Loading records…
+              </span>
+            </div>
+          ) : safeData.length > 0 ? (
+            <ul className="divide-y divide-line-soft">
+              {safeData.map((row, rowIndex) => {
+                const key = getKey(row, rowIndex)
+                const selected = canSelect && selectedKeys.has(key)
+                return (
+                  <li
+                    key={key}
+                    onClick={onRowClick ? (event) => handleRowClick(event, row) : undefined}
+                    onKeyDown={onRowClick ? (event) => handleRowKeyDown(event, row) : undefined}
+                    tabIndex={onRowClick ? 0 : undefined}
+                    className={cx(
+                      'px-4 py-4 transition-colors',
+                      selected ? 'bg-blush-100' : 'hover:bg-blush-50',
+                      onRowClick && 'cursor-pointer focus:bg-blush-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-rose/40',
+                      typeof rowClassName === 'function' ? rowClassName(row, rowIndex) : rowClassName,
+                    )}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="min-w-0 flex-1">{mobileTitle ? cellValue(mobileTitle, row, rowIndex) : null}</div>
+                      {canSelect && (
+                        <input
+                          type="checkbox"
+                          checked={selected}
+                          onChange={() => toggleRow(key)}
+                          aria-label={selection?.getLabel?.(row) || `Select row ${key}`}
+                          className="mt-0.5 size-4 flex-none cursor-pointer rounded border-line accent-rose"
+                        />
+                      )}
+                    </div>
+
+                    {mobileDetails.length > 0 && (
+                      <dl className="mt-3 grid grid-cols-[minmax(0,7.5rem)_minmax(0,1fr)] gap-x-3 gap-y-1.5 text-sm">
+                        {mobileDetails.map((col, colIndex) => (
+                          <Fragment key={col.key ?? colIndex}>
+                            <dt className="text-[11px] font-semibold uppercase tracking-wide leading-5 text-ink-muted">{col.header}</dt>
+                            <dd className={cx('min-w-0 text-ink', col.align === 'right' && 'tabular')}>
+                              {cellValue(col, row, rowIndex)}
+                            </dd>
+                          </Fragment>
+                        ))}
+                      </dl>
+                    )}
+
+                    {mobileActions.length > 0 && (
+                      <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-line-soft pt-3">
+                        {mobileActions.map((col, colIndex) => (
+                          <div key={col.key ?? colIndex}>{cellValue(col, row, rowIndex)}</div>
+                        ))}
+                      </div>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          ) : (
+            <div className="px-5 py-12">{emptyState}</div>
+          )}
+        </div>
+      )}
 
       {hasFooter && (
         <div className="border-t border-line-soft bg-blush-50 px-4 py-3 sm:px-5">

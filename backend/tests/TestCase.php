@@ -9,11 +9,19 @@ use App\Models\MaterialType;
 use App\Models\Roll;
 use App\Models\Texture;
 use App\Models\User;
+use App\Support\RoleCatalog;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Testing\TestResponse;
 
 abstract class TestCase extends BaseTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Role labels are memoised per request; tests rebuild the database between cases.
+        RoleCatalog::flush();
+    }
+
     /** Pretend requests come from the React app so Sanctum gives them a session. */
     protected function spa(): static
     {

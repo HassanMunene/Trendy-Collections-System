@@ -1,7 +1,8 @@
-import { useId, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react'
+import { useId, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react'
 import { Link } from 'react-router'
 import type { ApiProblem } from '../api/client'
 import { cx } from '../lib/cx'
+import { EyeIcon, EyeOffIcon } from './icons'
 
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
@@ -89,6 +90,25 @@ const controlBase =
 
 export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputElement>) {
   return <input {...rest} className={cx(controlBase, className)} />
+}
+
+/** Password box with a show/hide button, for picking a new password without typos. */
+export function PasswordInput({ className, ...rest }: InputHTMLAttributes<HTMLInputElement>) {
+  const [visible, setVisible] = useState(false)
+  return (
+    <div className="relative">
+      <Input {...rest} type={visible ? 'text' : 'password'} className={cx('pr-12', className)} />
+      <button
+        type="button"
+        onClick={() => setVisible((v) => !v)}
+        aria-label={visible ? 'Hide password' : 'Show password'}
+        aria-pressed={visible}
+        className="absolute inset-y-1 right-1 grid w-10 place-items-center rounded-lg text-ink-muted transition hover:bg-blush-100 hover:text-plum focus-visible:ring-2 focus-visible:ring-rose/40 focus-visible:outline-none"
+      >
+        {visible ? <EyeOffIcon /> : <EyeIcon />}
+      </button>
+    </div>
+  )
 }
 
 export function Select({ className, children, ...rest }: SelectHTMLAttributes<HTMLSelectElement>) {

@@ -17,7 +17,7 @@ class CatalogueSeeder extends Seeder
     public function run(): void
     {
         $lists = [
-            FabricCategory::class => ['Curtain fabric', 'Shia (sheer)', 'Lining', 'Pillow-case fabric', 'Other'],
+            FabricCategory::class => ['Curtain', 'Sheer', 'Lining', 'Pillow-case', 'Other'],
             MaterialType::class => ['Linen', 'Velvet', 'Voile', 'Polyester', 'Cotton', 'Satin', 'Jacquard', 'Blackout'],
             Texture::class => ['Plain', 'Woven', 'Embossed', 'Printed', 'Embroidered', 'Crushed'],
             Colour::class => ['White', 'Cream', 'Ivory', 'Beige', 'Grey', 'Silver', 'Brown', 'Gold', 'Maroon', 'Red', 'Pink', 'Purple', 'Blue', 'Navy', 'Green', 'Black'],

@@ -6,7 +6,7 @@ import { api } from '../api/endpoints'
 import { useCan } from '../auth/useMe'
 import { SearchIcon } from '../components/icons'
 import { RollCard } from '../components/RollCard'
-import { Button, ButtonLink, EmptyState, ErrorNotice, Input, Loading, PageHeader, Select } from '../components/ui'
+import { Button, EmptyState, ErrorNotice, Input, Loading, PageHeader, Select } from '../components/ui'
 import { cx } from '../lib/cx'
 import { plural } from '../lib/units'
 import { useLookups } from '../lib/useLookups'
@@ -52,12 +52,18 @@ export function RollsPage() {
 
   const filtersActive = Boolean(q || categoryId || fabricId || low || status !== 'active')
 
+  const openReceive = () => {
+    const next = new URLSearchParams(params)
+    next.set('receive', '1')
+    setParams(next)
+  }
+
   return (
     <>
       <PageHeader
         title="Rolls & stock"
         subtitle={query.data ? `${plural(query.data.meta.total, 'roll')}${status === 'active' ? ' in stock' : ''}` : ' '}
-        action={canReceive && <ButtonLink to="/rolls/receive">+ Receive a roll</ButtonLink>}
+        action={canReceive && <Button onClick={openReceive}>+ Receive stock</Button>}
       />
 
       {fabricId && (
@@ -123,7 +129,7 @@ export function RollsPage() {
                 Clear filters
               </Button>
             ) : canReceive ? (
-              <ButtonLink to="/rolls/receive">Receive a roll</ButtonLink>
+              <Button onClick={openReceive}>Receive stock</Button>
             ) : undefined
           }
         >

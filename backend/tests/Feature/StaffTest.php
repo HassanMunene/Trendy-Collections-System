@@ -113,4 +113,42 @@ class StaffTest extends TestCase
             '--superadmin' => true, '--name' => 'Two', '--username' => 'two', '--password' => 'strong-pass-1',
         ])->assertFailed();
     }
+
+    public function test_ensure_superadmin_command_creates_it_from_config_once(): void
+    {
+        config([
+            'trendy.superadmin.name' => 'Shop Owner',
+            'trendy.superadmin.username' => 'boss',
+            'trendy.superadmin.phone' => '0711 000 222',
+            'trendy.superadmin.password' => 'env-pass-123',
+        ]);
+
+        $this->artisan('trendy:ensure-superadmin')->assertSuccessful();
+
+        $boss = User::where('username', 'boss')->firstOrFail();
+        $this->assertTrue($boss->is_superadmin);
+        $this->assertTrue($boss->active);
+        $this->assertFalse($boss->must_change_password);
+        $this->assertSame('254711000222', $boss->phone);
+        $this->assertTrue(Hash::check('env-pass-123', $boss->password));
+
+        // Running again (every deploy) must not duplicate or reset the account.
+        $boss->update(['password' => 'changed-in-app-1']);
+        $this->artisan('trendy:ensure-superadmin')->assertSuccessful();
+
+        $this->assertSame(1, User::where('is_superadmin', true)->count());
+        $this->assertTrue(Hash::check('changed-in-app-1', $boss->fresh()->password));
+    }
+
+    public function test_ensure_superadmin_command_skips_when_credentials_are_not_configured(): void
+    {
+        config([
+            'trendy.superadmin.username' => null,
+            'trendy.superadmin.password' => null,
+        ]);
+
+        $this->artisan('trendy:ensure-superadmin')->assertSuccessful();
+
+        $this->assertSame(0, User::count());
+    }
 }

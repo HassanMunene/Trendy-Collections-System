@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router'
 import { toProblem, type ApiProblem } from '../api/client'
 import { api } from '../api/endpoints'
 import { useCurrentUser, useSetMe } from '../auth/useMe'
-import { Button, Card, ErrorNotice, Field, Input, Notice, PageHeader } from '../components/ui'
+import { Button, Card, ErrorNotice, Field, Notice, PageHeader, PasswordInput } from '../components/ui'
 
 /** Used both for the forced first change and from My account. */
 export function ChangePasswordForm({ onDone }: { onDone?: () => void }) {
@@ -40,13 +40,13 @@ export function ChangePasswordForm({ onDone }: { onDone?: () => void }) {
   return (
     <form onSubmit={submit} className="grid gap-4" noValidate>
       <Field label="Current password" error={problem?.fields.current_password}>
-        {(a) => <Input {...a} type="password" value={current} onChange={(e) => setCurrent(e.target.value)} autoComplete="current-password" />}
+        {(a) => <PasswordInput {...a} value={current} onChange={(e) => setCurrent(e.target.value)} autoComplete="current-password" />}
       </Field>
       <Field label="New password" error={problem?.fields.password} hint="At least 8 characters. Don't share it with anyone.">
-        {(a) => <Input {...a} type="password" value={next} onChange={(e) => setNext(e.target.value)} autoComplete="new-password" />}
+        {(a) => <PasswordInput {...a} value={next} onChange={(e) => setNext(e.target.value)} autoComplete="new-password" />}
       </Field>
-      <Field label="Type the new password again">
-        {(a) => <Input {...a} type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" />}
+      <Field label="Type the new password again" error={problem?.fields.password_confirmation}>
+        {(a) => <PasswordInput {...a} value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" />}
       </Field>
       {problem && problem.message && Object.keys(problem.fields).length === 0 && <ErrorNotice problem={problem} />}
       {saved && <Notice tone="success">Password changed.</Notice>}

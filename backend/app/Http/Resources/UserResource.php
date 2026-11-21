@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 
 /** @mixin User */
 class UserResource extends JsonResource
@@ -17,6 +18,7 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'username' => $this->username,
             'phone' => $this->phone,
+            'avatar_url' => $this->avatar_path ? Storage::disk('public')->url($this->avatar_path) : null,
             'role' => $this->role->value,
             'is_superadmin' => $this->is_superadmin,
             'active' => $this->active,

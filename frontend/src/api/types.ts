@@ -15,6 +15,7 @@ export interface StaffUser {
   name: string
   username: string
   phone: string | null
+  avatar_url: string | null
   role: Role
   is_superadmin: boolean
   active: boolean
@@ -98,6 +99,35 @@ export interface Movement {
   note: string
   actor?: { id: number; name: string }
   roll?: { id: number; tag: string }
+  created_at: string | null
+}
+
+export interface StockItem {
+  id: number
+  name: string
+  sku: string | null
+  unit: string
+  quantity: number
+  reorder_level: number | null
+  cost_cents?: number // hidden from staff without view_costs
+  supplier?: Supplier | null // hidden from staff without view_costs
+  location: string
+  notes: string
+  active: boolean
+  is_low: boolean
+  received_by?: { id: number; name: string }
+  created_at: string | null
+}
+
+export type StockItemMovementKind = 'receipt' | 'adjustment' | 'issue' | 'return' | 'transfer'
+
+export interface StockItemMovement {
+  id: number
+  kind: StockItemMovementKind
+  change_qty: number
+  balance_after: number
+  note: string
+  actor?: { id: number; name: string }
   created_at: string | null
 }
 

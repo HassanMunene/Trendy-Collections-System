@@ -3,6 +3,7 @@ import { cx } from '../lib/cx'
 const sizes = {
     xs: 'size-8 text-xs',
     sm: 'size-9 text-sm',
+    md: 'size-10 text-sm',
     lg: 'size-20 text-2xl sm:size-24',
     xl: 'size-24 text-3xl sm:size-28',
 }

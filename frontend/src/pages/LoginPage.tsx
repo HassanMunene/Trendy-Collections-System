@@ -4,8 +4,7 @@ import { toProblem, type ApiProblem } from '../api/client'
 import { api } from '../api/endpoints'
 import { useMe, useSetMe } from '../auth/useMe'
 import { Brand } from '../components/AppShell'
-import { Button, ErrorNotice, Field, Input, Notice } from '../components/ui'
-import { EyeIcon, EyeOffIcon } from '../components/icons'
+import { Button, ErrorNotice, Field, Input, Notice, PasswordInput } from '../components/ui'
 
 export function LoginPage() {
   const { data: me } = useMe()
@@ -14,7 +13,6 @@ export function LoginPage() {
   const location = useLocation()
   const [login, setLogin] = useState('')
   const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
   const [busy, setBusy] = useState(false)
   const [problem, setProblem] = useState<ApiProblem | null>(null)
   const idle = Boolean((location.state as { idle?: boolean } | null)?.idle)
@@ -67,16 +65,7 @@ export function LoginPage() {
             </Field>
             <Field label="Password" error={problem?.fields.password}>
               {(a) => (
-                <div className="flex items-center gap-2">
-                  <Input {...a} type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
-                  <button
-                    onClick={() => setShowPassword((c) => !c)}
-                    className="rounded-md p-1.5 text-ink-muted hover:text-plum focus:outline-none focus:ring-2 focus:ring-plum focus:ring-offset-2"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-                  </button>
-                </div>
+                <PasswordInput {...a} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
               )}
             </Field>
             {problem && !problem.fields.login && !problem.fields.password && <ErrorNotice problem={problem} />}

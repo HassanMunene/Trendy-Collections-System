@@ -14,115 +14,118 @@ import { FabricFormPage } from './pages/FabricFormPage'
 import { FabricsPage } from './pages/FabricsPage'
 import { LoginPage } from './pages/LoginPage'
 import { NotFoundPage } from './pages/NotFoundPage'
-import { ReceiveRollPage } from './pages/ReceiveRollPage'
 import { RollDetailPage } from './pages/RollDetailPage'
 import { RollsPage } from './pages/RollsPage'
 import { StaffPage } from './pages/StaffPage'
+import { StockPage } from './pages/StockPage'
 
 /** Signed-in area. Sends guests to /login and temporary-password users to set their own. */
 function RequireAuth({ children }: { children: ReactNode }) {
-  const { data: me, isLoading, error, refetch } = useMe()
-  const location = useLocation()
-  if (isLoading) return <Loading label="Opening Trendy…" />
-  if (error)
-    return (
-      <div className="mx-auto max-w-md p-6">
-        <ErrorNotice problem={toProblem(error)} onRetry={() => refetch()} />
-      </div>
-    )
-  if (!me) return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />
-  if (me.must_change_password && location.pathname !== '/set-password') return <Navigate to="/set-password" replace />
-  return <>{children}</>
+    const { data: me, isLoading, error, refetch } = useMe()
+    const location = useLocation()
+    if (isLoading) return <Loading label="Opening Trendy…" />
+    if (error)
+        return (
+            <div className="mx-auto max-w-md p-6">
+                <ErrorNotice problem={toProblem(error)} onRetry={() => refetch()} />
+            </div>
+        )
+    if (!me) return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />
+    if (me.must_change_password && location.pathname !== '/set-password') return <Navigate to="/set-password" replace />
+    return <>{children}</>
 }
 
 function RequirePermission({ permission, children }: { permission: keyof Permissions; children: ReactNode }) {
-  const { data: me } = useMe()
-  if (!me?.permissions[permission]) {
-    return (
-      <div className="pt-6">
-        <ErrorNotice problem={{ status: 403, message: 'Your account is not allowed to open this page.', fields: {} }} />
-      </div>
-    )
-  }
-  return <>{children}</>
+    const { data: me } = useMe()
+    if (!me?.permissions[permission]) {
+        return (
+            <div className="pt-6">
+                <ErrorNotice problem={{ status: 403, message: 'Your account is not allowed to open this page.', fields: {} }} />
+            </div>
+        )
+    }
+    return <>{children}</>
 }
 
 /** If the session expires (401) or a password change is demanded, refresh who we are. */
 function SessionWatcher() {
-  const qc = useQueryClient()
-  useEffect(() => {
-    const id = http.interceptors.response.use(undefined, (error) => {
-      if (axios.isAxiosError(error)) {
-        const status = error.response?.status
-        const code = (error.response?.data as { code?: string } | undefined)?.code
-        const isAuthCall = /\/(login|me)$/.test(error.config?.url ?? '')
-        if (status === 401 && !isAuthCall) qc.setQueryData(ME_KEY, null)
-        if (code === 'password_change_required') qc.invalidateQueries({ queryKey: ME_KEY })
-      }
-      throw error
-    })
-    return () => http.interceptors.response.eject(id)
-  }, [qc])
-  return <Outlet />
+    const qc = useQueryClient()
+    useEffect(() => {
+        const id = http.interceptors.response.use(undefined, (error) => {
+            if (axios.isAxiosError(error)) {
+                const status = error.response?.status
+                const code = (error.response?.data as { code?: string } | undefined)?.code
+                const isAuthCall = /\/(login|me)$/.test(error.config?.url ?? '')
+                if (status === 401 && !isAuthCall) qc.setQueryData(ME_KEY, null)
+                if (code === 'password_change_required') qc.invalidateQueries({ queryKey: ME_KEY })
+            }
+            throw error
+        })
+        return () => http.interceptors.response.eject(id)
+    }, [qc])
+    return <Outlet />
 }
 
 const router = createBrowserRouter([
-  {
-    element: <SessionWatcher />,
-    children: [
-      { path: '/login', element: <LoginPage /> },
-      {
-        path: '/set-password',
-        element: (
-          <RequireAuth>
-            <ChangePasswordPage />
-          </RequireAuth>
-        ),
-      },
-      {
-        element: (
-          <RequireAuth>
-            <AppShell />
-          </RequireAuth>
-        ),
+    {
+        element: <SessionWatcher />,
         children: [
-          { index: true, element: <DashboardPage /> },
-          { path: 'rolls', element: <RollsPage /> },
-          {
-            path: 'rolls/receive',
-            element: (
-              <RequirePermission permission="receive_stock">
-                <ReceiveRollPage />
-              </RequirePermission>
-            ),
-          },
-          { path: 'rolls/:id', element: <RollDetailPage /> },
-          { path: 'fabrics', element: <FabricsPage /> },
-          {
-            path: 'fabrics/new',
-            element: (
-              <RequirePermission permission="manage_catalogue">
-                <FabricFormPage />
-              </RequirePermission>
-            ),
-          },
-          { path: 'fabrics/:id', element: <FabricFormPage /> },
-          {
-            path: 'staff',
-            element: (
-              <RequirePermission permission="manage_staff">
-                <StaffPage />
-              </RequirePermission>
-            ),
-          },
-          { path: 'account', element: <AccountPage /> },
-          { path: '*', element: <NotFoundPage /> },
+            { path: '/login', element: <LoginPage /> },
+            {
+                path: '/set-password',
+                element: (
+                    <RequireAuth>
+                        <ChangePasswordPage />
+                    </RequireAuth>
+                ),
+            },
+            {
+                element: (
+                    <RequireAuth>
+                        <AppShell />
+                    </RequireAuth>
+                ),
+                children: [
+                    { index: true, element: <DashboardPage /> },
+                    { path: 'rolls', element: <RollsPage /> },
+                    {
+                        // Receiving happens in a drawer on any page, opened with ?receive=1.
+                        path: 'rolls/receive',
+                        element: (
+                            <RequirePermission permission="receive_stock">
+                                <Navigate to="/rolls?receive=1" replace />
+                            </RequirePermission>
+                        ),
+                    },
+                    { path: 'rolls/:id', element: <RollDetailPage /> },
+                    { path: 'stock', element: <StockPage /> },
+                    { path: 'fabrics', element: <FabricsPage /> },
+                    {
+                        // Creation happens in a drawer on the list page.
+                        path: 'fabrics/new',
+                        element: (
+                            <RequirePermission permission="manage_catalogue">
+                                <Navigate to="/fabrics?new=1" replace />
+                            </RequirePermission>
+                        ),
+                    },
+                    { path: 'fabrics/:id', element: <FabricFormPage /> },
+                    {
+                        path: 'staff',
+                        element: (
+                            <RequirePermission permission="manage_staff">
+                                <StaffPage />
+                            </RequirePermission>
+                        ),
+                    },
+                    { path: 'account', element: <AccountPage /> },
+                    { path: '*', element: <NotFoundPage /> },
+                ],
+            },
         ],
-      },
-    ],
-  },
+    },
 ])
 
 export function App() {
-  return <RouterProvider router={router} />
+    return <RouterProvider router={router} />
 }

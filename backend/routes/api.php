@@ -4,9 +4,11 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\FabricController;
 use App\Http\Controllers\Api\LookupController;
+use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RollAdjustmentController;
 use App\Http\Controllers\Api\RollController;
 use App\Http\Controllers\Api\StaffController;
+use App\Http\Controllers\Api\StockItemController;
 use Illuminate\Support\Facades\Route;
 
 // All routes are prefixed with /api. The React app first calls GET /sanctum/csrf-cookie.
@@ -17,6 +19,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/me/password', [AuthController::class, 'changePassword']);
+    Route::patch('/me', [ProfileController::class, 'update']);
+    Route::post('/me/avatar', [ProfileController::class, 'updateAvatar']);
+    Route::delete('/me/avatar', [ProfileController::class, 'destroyAvatar']);
 
     // Everything below is blocked until a temporary password has been changed.
     Route::middleware('password.changed')->group(function () {
@@ -42,5 +47,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/rolls/{roll}', [RollController::class, 'show']);
         Route::get('/rolls/{roll}/adjustments', [RollAdjustmentController::class, 'index']);
         Route::post('/rolls/{roll}/adjustments', [RollAdjustmentController::class, 'store']);
+
+        // Stock that is not a fabric roll (hangers, trims, lining...).
+        Route::get('/stock-items', [StockItemController::class, 'index']);
+        Route::post('/stock-items', [StockItemController::class, 'store']);
+        Route::get('/stock-items/{stockItem}', [StockItemController::class, 'show']);
     });
 });

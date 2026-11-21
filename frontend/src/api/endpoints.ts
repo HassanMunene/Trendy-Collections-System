@@ -1,56 +1,73 @@
 import { http } from './client'
 import type {
-  Adjustment,
-  Dashboard,
-  Fabric,
-  Lookups,
-  LookupType,
-  Me,
-  Movement,
-  Paginated,
-  Roll,
-  StaffUser,
-  Term,
+    Adjustment,
+    Dashboard,
+    Fabric,
+    Lookups,
+    LookupType,
+    Me,
+    Movement,
+    Paginated,
+    Roll,
+    StaffUser,
+    StockItem,
+    StockItemMovement,
+    Term,
 } from './types'
 
 const unwrap = <T>(p: Promise<{ data: { data: T } }>) => p.then((r) => r.data.data)
 
 export const api = {
-  // Auth
-  login: (login: string, password: string) => unwrap<Me>(http.post('/login', { login, password })),
-  logout: () => http.post('/logout'),
-  me: () => unwrap<Me>(http.get('/me')),
-  changePassword: (body: { current_password: string; password: string; password_confirmation: string }) =>
-    unwrap<Me>(http.post('/me/password', body)),
+    // Auth
+    login: (login: string, password: string) => unwrap<Me>(http.post('/login', { login, password })),
+    logout: () => http.post('/logout'),
+    me: () => unwrap<Me>(http.get('/me')),
+    changePassword: (body: { current_password: string; password: string; password_confirmation: string }) =>
+        unwrap<Me>(http.post('/me/password', body)),
+    updateMe: (body: { name: string; username: string; phone: string }) =>
+        unwrap<Me>(http.patch('/me', body)),
+    uploadAvatar: (file: File) => {
+        const body = new FormData()
+        body.append('avatar', file)
+        return unwrap<Me>(http.post('/me/avatar', body))
+    },
+    removeAvatar: () => unwrap<Me>(http.delete('/me/avatar')),
 
-  dashboard: () => unwrap<Dashboard>(http.get('/dashboard')),
+    dashboard: () => unwrap<Dashboard>(http.get('/dashboard')),
 
-  // Staff
-  staff: () => unwrap<StaffUser[]>(http.get('/staff')),
-  createStaff: (body: { name: string; username: string; phone: string; role: string; password: string }) =>
-    unwrap<StaffUser>(http.post('/staff', body)),
-  updateStaff: (id: number, body: { name: string; username: string; phone: string; role: string }) =>
-    unwrap<StaffUser>(http.patch(`/staff/${id}`, body)),
-  resetStaffPassword: (id: number) =>
-    unwrap<{ temporary_password: string }>(http.post(`/staff/${id}/reset-password`)),
-  setStaffActive: (id: number, active: boolean) => unwrap<StaffUser>(http.post(`/staff/${id}/active`, { active })),
+    // Staff
+    staff: () => unwrap<StaffUser[]>(http.get('/staff')),
+    createStaff: (body: { name: string; username: string; phone: string; role: string; password: string }) =>
+        unwrap<StaffUser>(http.post('/staff', body)),
+    updateStaff: (id: number, body: { name: string; username: string; phone: string; role: string }) =>
+        unwrap<StaffUser>(http.patch(`/staff/${id}`, body)),
+    resetStaffPassword: (id: number) =>
+        unwrap<{ temporary_password: string }>(http.post(`/staff/${id}/reset-password`)),
+    setStaffActive: (id: number, active: boolean) => unwrap<StaffUser>(http.post(`/staff/${id}/active`, { active })),
 
-  // Catalogue
-  lookups: () => unwrap<Lookups>(http.get('/lookups')),
-  addLookup: (type: LookupType, name: string) => unwrap<Term>(http.post(`/lookups/${type}`, { name })),
-  fabrics: (params: { q?: string; category_id?: number; include_inactive?: boolean } = {}) =>
-    unwrap<Fabric[]>(http.get('/fabrics', { params: { ...params, include_inactive: params.include_inactive ? 1 : undefined } })),
-  fabric: (id: number) => unwrap<Fabric>(http.get(`/fabrics/${id}`)),
-  createFabric: (body: Record<string, unknown>) => unwrap<Fabric>(http.post('/fabrics', body)),
-  updateFabric: (id: number, body: Record<string, unknown>) => unwrap<Fabric>(http.patch(`/fabrics/${id}`, body)),
+    // Catalogue
+    lookups: () => unwrap<Lookups>(http.get('/lookups')),
+    addLookup: (type: LookupType, name: string) => unwrap<Term>(http.post(`/lookups/${type}`, { name })),
+    fabrics: (params: { q?: string; category_id?: number; include_inactive?: boolean } = {}) =>
+        unwrap<Fabric[]>(http.get('/fabrics', { params: { ...params, include_inactive: params.include_inactive ? 1 : undefined } })),
+    fabric: (id: number) => unwrap<Fabric>(http.get(`/fabrics/${id}`)),
+    createFabric: (body: Record<string, unknown>) => unwrap<Fabric>(http.post('/fabrics', body)),
+    updateFabric: (id: number, body: Record<string, unknown>) => unwrap<Fabric>(http.patch(`/fabrics/${id}`, body)),
 
-  // Rolls
-  rolls: (params: Record<string, string | number | undefined>) =>
-    http.get<Paginated<Roll>>('/rolls', { params }).then((r) => r.data),
-  roll: (id: number) =>
-    http.get<{ data: Roll; movements: Movement[] }>(`/rolls/${id}`).then((r) => r.data),
-  receiveRoll: (body: Record<string, unknown>) => unwrap<Roll>(http.post('/rolls', body)),
-  adjustments: (rollId: number) => unwrap<Adjustment[]>(http.get(`/rolls/${rollId}/adjustments`)),
-  adjustRoll: (rollId: number, body: { counted_cm: number; reason: string }) =>
-    unwrap<Adjustment>(http.post(`/rolls/${rollId}/adjustments`, body)),
+    // Rolls
+    rolls: (params: Record<string, string | number | undefined>) =>
+        http.get<Paginated<Roll>>('/rolls', { params }).then((r) => r.data),
+    roll: (id: number) =>
+        http.get<{ data: Roll; movements: Movement[] }>(`/rolls/${id}`).then((r) => r.data),
+    receiveRoll: (body: Record<string, unknown>) => unwrap<Roll>(http.post('/rolls', body)),
+    adjustments: (rollId: number) => unwrap<Adjustment[]>(http.get(`/rolls/${rollId}/adjustments`)),
+    adjustRoll: (rollId: number, body: { counted_cm: number; reason: string }) =>
+        unwrap<Adjustment>(http.post(`/rolls/${rollId}/adjustments`, body)),
+
+    // Stock that is not a fabric roll
+    stockItems: (params: Record<string, string | number | undefined> = {}) =>
+        http.get<Paginated<StockItem>>('/stock-items', { params }).then((r) => r.data),
+    stockItem: (id: number) =>
+        http.get<{ data: StockItem; movements: StockItemMovement[] }>(`/stock-items/${id}`).then((r) => r.data),
+    receiveStockItem: (body: Record<string, unknown>) => unwrap<StockItem>(http.post('/stock-items', body)),
 }

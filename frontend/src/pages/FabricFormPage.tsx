@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { toProblem, type ApiProblem } from '../api/client'
 import { api } from '../api/endpoints'
 import { useCan } from '../auth/useMe'
@@ -18,6 +18,7 @@ export function FabricFormPage() {
   const canManage = useCan('manage_catalogue')
   const canReceive = useCan('receive_stock')
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const qc = useQueryClient()
   const lookups = useLookups()
   const fabric = useQuery({ queryKey: ['fabric', id], queryFn: () => api.fabric(id), enabled: !isNew })
@@ -84,7 +85,18 @@ export function FabricFormPage() {
           subtitle={`${f.code} · ${f.category?.name ?? ''}${f.active ? '' : ' · no longer sold'}`}
           action={
             <>
-              {canReceive && f.active && <ButtonLink to={`/rolls/receive?fabric_id=${f.id}`}>Receive a roll</ButtonLink>}
+              {canReceive && f.active && (
+                <Button
+                  onClick={() => {
+                    const next = new URLSearchParams(searchParams)
+                    next.set('receive', 'roll')
+                    next.set('receive_fabric', String(f.id))
+                    setSearchParams(next)
+                  }}
+                >
+                  Receive stock
+                </Button>
+              )}
               <ButtonLink to={`/rolls?fabric_id=${f.id}`} variant="secondary">
                 See its rolls
               </ButtonLink>

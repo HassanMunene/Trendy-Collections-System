@@ -4,7 +4,8 @@ import { toProblem, type ApiProblem } from '../api/client'
 import { api } from '../api/endpoints'
 import { useMe, useSetMe } from '../auth/useMe'
 import { Brand } from '../components/AppShell'
-import { Button, ErrorNotice, Field, Input } from '../components/ui'
+import { Button, ErrorNotice, Field, Input, Notice } from '../components/ui'
+import { EyeIcon, EyeOffIcon } from '../components/icons'
 
 export function LoginPage() {
   const { data: me } = useMe()
@@ -13,8 +14,10 @@ export function LoginPage() {
   const location = useLocation()
   const [login, setLogin] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [busy, setBusy] = useState(false)
   const [problem, setProblem] = useState<ApiProblem | null>(null)
+  const idle = Boolean((location.state as { idle?: boolean } | null)?.idle)
 
   if (me) return <Navigate to="/" replace />
 
@@ -50,6 +53,12 @@ export function LoginPage() {
           <h2 className="font-display text-3xl text-plum">Sign in</h2>
           <p className="mt-1 mb-6 text-sm text-ink-muted">Use your username or phone number.</p>
 
+          {idle && (
+            <div className="mb-5">
+              <Notice tone="warn">You were signed out after 12 hours without activity. Sign in to continue where you left off.</Notice>
+            </div>
+          )}
+
           <div className="grid gap-4">
             <Field label="Username or phone" error={problem?.fields.login}>
               {(a) => (
@@ -57,7 +66,18 @@ export function LoginPage() {
               )}
             </Field>
             <Field label="Password" error={problem?.fields.password}>
-              {(a) => <Input {...a} type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />}
+              {(a) => (
+                <div className="flex items-center gap-2">
+                  <Input {...a} type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
+                  <button
+                    onClick={() => setShowPassword((c) => !c)}
+                    className="rounded-md p-1.5 text-ink-muted hover:text-plum focus:outline-none focus:ring-2 focus:ring-plum focus:ring-offset-2"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                  </button>
+                </div>
+              )}
             </Field>
             {problem && !problem.fields.login && !problem.fields.password && <ErrorNotice problem={problem} />}
             <Button type="submit" busy={busy} disabled={!login || !password} className="w-full">

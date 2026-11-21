@@ -62,6 +62,7 @@ export function FabricsPage() {
             key: 'code',
             header: 'Code',
             noWrap: true,
+            mobile: 'detail',
             render: (f) => (
                 <Link to={`/fabrics/${f.id}`} className="font-mono text-sm font-bold text-rose-dark hover:underline">
                     {f.code}
@@ -71,6 +72,7 @@ export function FabricsPage() {
         {
             key: 'fabric',
             header: 'Fabric',
+            mobile: 'title',
             render: (f) => (
                 <span className="flex items-center gap-2 font-semibold text-plum">
                     <Swatch name={f.colour?.name} />

@@ -8,6 +8,7 @@ export interface Permissions {
   receive_stock: boolean
   adjust_stock: boolean
   view_costs: boolean
+  view_audit: boolean
 }
 
 export interface StaffUser {
@@ -16,7 +17,8 @@ export interface StaffUser {
   username: string
   phone: string | null
   avatar_url: string | null
-  role: Role
+  role: string
+  role_label: string
   is_superadmin: boolean
   active: boolean
   must_change_password: boolean
@@ -26,6 +28,8 @@ export interface StaffUser {
 
 export interface Me extends StaffUser {
   permissions: Permissions
+  /** How long the server keeps an idle session, in seconds. */
+  session_lifetime_seconds: number
 }
 
 export interface Term {
@@ -34,12 +38,64 @@ export interface Term {
   active: boolean
 }
 
+export interface RoleOption {
+  key: string
+  label: string
+  builtin: boolean
+  locked: boolean
+}
+
+export interface PermissionInfo {
+  key: string
+  label: string
+  description: string
+  assignable: boolean
+}
+
+export interface RolePermissionRole {
+  key: string
+  label: string
+  description: string
+  builtin: boolean
+  locked: boolean
+  members: number
+  permissions: string[]
+}
+
+export interface RolePermissionsData {
+  permissions: PermissionInfo[]
+  roles: RolePermissionRole[]
+}
+
+export interface AuditActor {
+  id: number
+  name: string
+  username: string
+  role: string
+  is_superadmin: boolean
+  avatar_url: string | null
+}
+
+export interface AuditEvent {
+  id: number
+  action: string
+  entity_type: string
+  entity_id: number | null
+  details: Record<string, unknown>
+  actor: AuditActor | null
+  ip_address: string | null
+  created_at: string | null
+}
+
 export interface Supplier {
   id: number
   name: string
   phone: string | null
   building: string
   stall: string
+  notes: string
+  active: boolean
+  created_at: string | null
 }
 
 export type Opacity = '' | 'sheer' | 'light_filtering' | 'dim_out' | 'blackout'

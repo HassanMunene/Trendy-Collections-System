@@ -13,7 +13,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
@@ -34,7 +33,7 @@ class StaffController extends Controller
         $data = $this->validated($request);
 
         $user = User::create($data + ['must_change_password' => true, 'active' => true]);
-        Audit::record($request->user(), 'staff.created', $user, ['username' => $user->username, 'role' => $user->role->value]);
+        Audit::record($request->user(), 'staff.created', $user, ['username' => $user->username, 'role' => $user->role]);
 
         return (new UserResource($user))->response()->setStatusCode(201);
     }
@@ -47,33 +46,40 @@ class StaffController extends Controller
         unset($data['password']);
 
         return DB::transaction(function () use ($request, $staff, $data) {
-            if ($staff->role === Role::Owner && $data['role'] !== Role::Owner->value) {
+            if ($staff->role === Role::Owner->value && $data['role'] !== Role::Owner->value) {
                 $this->ensureAnotherOwner($staff);
             }
             $before = $staff->only(['name', 'username', 'phone', 'role']);
             $staff->update($data);
             Audit::record($request->user(), 'staff.updated', $staff, [
                 'before' => array_map(fn ($v) => $v instanceof Role ? $v->value : $v, $before),
-                'after' => $staff->only(['name', 'username', 'phone']) + ['role' => $staff->role->value],
+                'after' => $staff->only(['name', 'username', 'phone']) + ['role' => $staff->role],
             ]);
 
             return new UserResource($staff);
         });
     }
 
-    /** Owner sets a temporary password; the staff member must change it on next sign-in. */
-    public function resetPassword(Request $request, User $staff): JsonResponse
+    /** Owner chooses a new password; the staff member must change it on next sign-in. */
+    public function resetPassword(Request $request, User $staff): UserResource
     {
         Gate::authorize('manage-staff');
         $this->guardTarget($request->user(), $staff);
 
-        $temporary = Str::password(10, symbols: false);
-        $staff->forceFill(['password' => $temporary, 'must_change_password' => true])->save();
+        if ($staff->is($request->user())) {
+            throw ValidationException::withMessages(['password' => 'Change your own password from My account.']);
+        }
+
+        $data = $request->validate([
+            'password' => ['required', 'string', Password::min(8), 'confirmed'],
+        ]);
+
+        $staff->forceFill(['password' => $data['password'], 'must_change_password' => true])->save();
         // Sign the person out everywhere.
         DB::table('sessions')->where('user_id', $staff->id)->delete();
         Audit::record($request->user(), 'staff.password_reset', $staff);
 
-        return response()->json(['data' => ['temporary_password' => $temporary]]);
+        return new UserResource($staff->fresh());
     }
 
     public function setActive(Request $request, User $staff): UserResource
@@ -82,12 +88,16 @@ class StaffController extends Controller
         $this->guardTarget($request->user(), $staff);
         $active = $request->validate(['active' => ['required', 'boolean']])['active'];
 
+        if ($staff->is_superadmin && ! $active) {
+            throw ValidationException::withMessages(['active' => 'The superadmin account cannot be switched off.']);
+        }
+
         if ($staff->is($request->user()) && ! $active) {
             throw ValidationException::withMessages(['active' => 'You cannot switch off your own account.']);
         }
 
         return DB::transaction(function () use ($request, $staff, $active) {
-            if (! $active && $staff->role === Role::Owner) {
+            if (! $active && $staff->role === Role::Owner->value) {
                 $this->ensureAnotherOwner($staff);
             }
             $staff->forceFill(['active' => $active])->save();
@@ -112,7 +122,7 @@ class StaffController extends Controller
             'name' => ['required', 'string', 'max:100'],
             'username' => ['required', 'string', 'min:3', 'max:40', 'regex:/^[A-Za-z0-9._-]+$/', Rule::unique('users', 'username')->ignore($existing)],
             'phone' => ['nullable', 'string', 'regex:/^254[17]\d{8}$/', Rule::unique('users', 'phone')->ignore($existing)],
-            'role' => ['required', Rule::enum(Role::class)],
+            'role' => ['required', 'string', Rule::exists('roles', 'key')],
             'password' => $existing ? ['prohibited'] : ['required', 'string', Password::min(8)],
         ], [
             'username.regex' => 'Use letters, numbers, dots, dashes or underscores only.',

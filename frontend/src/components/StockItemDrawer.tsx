@@ -7,6 +7,7 @@ import { shillingsToCents } from '../lib/units'
 import { useLookups } from '../lib/useLookups'
 import { Drawer } from './Drawer'
 import { Button, ErrorNotice, Field, Input, Select, Textarea, UnitInput } from './ui'
+import { CameraUI } from '../components/CameraCapture'
 
 const UNITS: { value: string; label: string }[] = [
   { value: 'pcs', label: 'Pieces' },
@@ -53,6 +54,7 @@ export function StockItemDrawer({ onClose }: { onClose: () => void }) {
 
   const set = <K extends keyof ItemDraft>(k: K, v: ItemDraft[K]) => setDraft((d) => ({ ...d, [k]: v }))
   const f = problem?.fields ?? {}
+
   const quantity = Number(draft.quantity)
   const costCents = draft.cost.trim() ? shillingsToCents(draft.cost) : 0
 
@@ -133,6 +135,8 @@ export function StockItemDrawer({ onClose }: { onClose: () => void }) {
           <Field label="What did you receive?" error={f.name} hint="e.g. Wooden hangers">
             {(a) => <Input {...a} value={draft.name} onChange={(e) => set('name', e.target.value)} autoFocus />}
           </Field>
+
+          <CameraUI onPhotoTaken={() => setDraft((d) => ({ ...d, name: `Captured item – photo attached` }))} onClose={() => {}} />
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="How many?" error={f.quantity} hint={`In ${unitLabel}`}>

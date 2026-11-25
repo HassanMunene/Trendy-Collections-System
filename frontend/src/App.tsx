@@ -10,13 +10,18 @@ import { ErrorNotice, Loading } from './components/ui'
 import { AccountPage } from './pages/AccountPage'
 import { AuditPage } from './pages/AuditPage'
 import { ChangePasswordPage } from './pages/ChangePasswordPage'
+import { CustomersPage } from './pages/CustomersPage'
+import { DayBookPage } from './pages/DayBookPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { FabricFormPage } from './pages/FabricFormPage'
 import { FabricsPage } from './pages/FabricsPage'
 import { LoginPage } from './pages/LoginPage'
 import { NotFoundPage } from './pages/NotFoundPage'
+import { ProductsPage } from './pages/ProductsPage'
 import { RollDetailPage } from './pages/RollDetailPage'
 import { RollsPage } from './pages/RollsPage'
+import { SellPage } from './pages/SellPage'
+import { SewingPage } from './pages/SewingPage'
 import { StaffPage } from './pages/StaffPage'
 import { StockPage } from './pages/StockPage'
 import { SuppliersPage } from './pages/SuppliersPage'
@@ -85,6 +90,32 @@ const router = createBrowserRouter([
                 element: ( <RequireAuth><AppShell /></RequireAuth>),
                 children: [
                     { index: true, element: <DashboardPage /> },
+                    {
+                        path: 'sell',
+                        element: (
+                            <RequirePermission permission="sell">
+                                <SellPage />
+                            </RequirePermission>
+                        ),
+                    },
+                    {
+                        path: 'day-book',
+                        element: (
+                            <RequirePermission permission="sell">
+                                <DayBookPage />
+                            </RequirePermission>
+                        ),
+                    },
+                    {
+                        path: 'customers',
+                        element: (
+                            <RequirePermission permission="sell">
+                                <CustomersPage />
+                            </RequirePermission>
+                        ),
+                    },
+                    { path: 'products', element: <ProductsPage /> },
+                    { path: 'sewing', element: <SewingPage /> },
                     { path: 'rolls', element: <RollsPage /> },
                     {
                         // Receiving happens in a drawer on any page, opened with ?receive=1.

@@ -2,15 +2,21 @@
 
 use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\DayBookController;
 use App\Http\Controllers\Api\FabricController;
 use App\Http\Controllers\Api\LookupController;
+use App\Http\Controllers\Api\ProductCategoryController;
+use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\RolePermissionController;
 use App\Http\Controllers\Api\RollAdjustmentController;
 use App\Http\Controllers\Api\RollController;
+use App\Http\Controllers\Api\SaleController;
 use App\Http\Controllers\Api\SessionController;
+use App\Http\Controllers\Api\SewingBatchController;
 use App\Http\Controllers\Api\StaffController;
 use App\Http\Controllers\Api\StockItemController;
 use App\Http\Controllers\Api\SupplierController;
@@ -72,5 +78,30 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/stock-items', [StockItemController::class, 'index']);
         Route::post('/stock-items', [StockItemController::class, 'store']);
         Route::get('/stock-items/{stockItem}', [StockItemController::class, 'show']);
+        Route::post('/stock-items/{stockItem}/receipts', [StockItemController::class, 'receive']);
+        Route::post('/stock-items/{stockItem}/adjustments', [StockItemController::class, 'adjust']);
+
+        // What the shop sells (finished goods are stock items with a product category).
+        Route::get('/product-categories', [ProductCategoryController::class, 'index']);
+        Route::post('/product-categories', [ProductCategoryController::class, 'store']);
+        Route::get('/products', [ProductController::class, 'index']);
+        Route::post('/products', [ProductController::class, 'store']);
+        Route::patch('/products/{product}', [ProductController::class, 'update']);
+
+        // Counter sales: the sales book replacement.
+        Route::get('/customers', [CustomerController::class, 'index']);
+        Route::post('/customers', [CustomerController::class, 'store']);
+        Route::get('/customers/{customer}', [CustomerController::class, 'show']);
+        Route::patch('/customers/{customer}', [CustomerController::class, 'update']);
+        Route::post('/sales', [SaleController::class, 'store']);
+        Route::get('/sales/price-hint', [SaleController::class, 'priceHint']);
+        Route::get('/sales/{sale}', [SaleController::class, 'show']);
+        Route::post('/sales/{sale}/void', [SaleController::class, 'void']);
+        Route::get('/day-book', DayBookController::class);
+
+        // Sewing for the shelf: roll metres in, finished goods out.
+        Route::get('/sewing-batches', [SewingBatchController::class, 'index']);
+        Route::get('/sewing-batches/tailors', [SewingBatchController::class, 'tailors']);
+        Route::post('/sewing-batches', [SewingBatchController::class, 'store']);
     });
 });

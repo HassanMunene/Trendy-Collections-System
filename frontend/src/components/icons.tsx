@@ -215,3 +215,56 @@ export const LogoutIcon = ({ size = 18, ...p }: IconProps) => (
         <path d="M10 8l-4 4 4 4M6 12h10" />
     </Svg>
 )
+export const CartIcon = (p: IconProps) => (
+    <Svg {...p}>
+        <path d="M3 4h2l2.4 11.2a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.1L21 8H6.2" />
+        <circle cx="9.5" cy="20" r="1.2" />
+        <circle cx="17.5" cy="20" r="1.2" />
+    </Svg>
+)
+
+export const BookIcon = (p: IconProps) => (
+    <Svg {...p}>
+        <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z" />
+        <path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5" />
+        <path d="M8.5 7.5h7M8.5 11h5" />
+    </Svg>
+)
+
+export const TagIcon = (p: IconProps) => (
+    <Svg {...p}>
+        <path d="M3 12.2V4a1 1 0 0 1 1-1h8.2a1 1 0 0 1 .7.3l8.1 8.1a1 1 0 0 1 0 1.4l-8.2 8.2a1 1 0 0 1-1.4 0l-8.1-8.1a1 1 0 0 1-.3-.7z" />
+        <circle cx="8" cy="8" r="1.4" />
+    </Svg>
+)
+
+export const NeedleIcon = (p: IconProps) => (
+    <Svg {...p}>
+        <path d="M20.5 3.5 6 18" />
+        <path d="M18 3.2a2.2 2.2 0 0 1 3 3l-1 1" />
+        <path d="M6 18l-2.5 2.5" />
+        <path d="M14 4c-6 1-9 4-9.5 8s2.5 5.5 5 4.5" />
+    </Svg>
+)
+
+export const PeopleIcon = (p: IconProps) => (
+    <Svg {...p}>
+        <path d="M4 21v-1.5a4.5 4.5 0 0 1 4.5-4.5h3a4.5 4.5 0 0 1 4.5 4.5V21" />
+        <circle cx="10" cy="8" r="3.5" />
+        <path d="M17 4.5a3.5 3.5 0 0 1 0 7M20 21v-1.5a4.5 4.5 0 0 0-2.5-4" />
+    </Svg>
+)
+
+export const DotsIcon = (p: IconProps) => (
+    <Svg {...p}>
+        <circle cx="5" cy="12" r="1.3" />
+        <circle cx="12" cy="12" r="1.3" />
+        <circle cx="19" cy="12" r="1.3" />
+    </Svg>
+)
+
+export const MinusIcon = ({ size = 20, ...p }: IconProps) => (
+    <Svg size={size} {...p}>
+        <path d="M5 12h14" />
+    </Svg>
+)

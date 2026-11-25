@@ -9,6 +9,9 @@ export interface Permissions {
   adjust_stock: boolean
   view_costs: boolean
   view_audit: boolean
+  sell: boolean
+  void_sales: boolean
+  record_sewing: boolean
 }
 
 export interface StaffUser {
@@ -145,7 +148,7 @@ export interface Roll {
   created_at: string | null
 }
 
-export type MovementKind = 'receipt' | 'adjustment' | 'cut' | 'sale' | 'return' | 'transfer'
+export type MovementKind = 'receipt' | 'adjustment' | 'cut' | 'sale' | 'return' | 'transfer' | 'reversal'
 
 export interface Movement {
   id: number
@@ -162,6 +165,13 @@ export interface StockItem {
   id: number
   name: string
   sku: string | null
+  is_product: boolean
+  category?: { id: number; name: string } | null
+  colour?: { id: number; name: string } | null
+  variant: string
+  /** Asking price per unit; the agreed price is typed at the counter. */
+  price_cents: number | null
+  tracks_stock: boolean
   unit: string
   quantity: number
   reorder_level: number | null
@@ -175,7 +185,7 @@ export interface StockItem {
   created_at: string | null
 }
 
-export type StockItemMovementKind = 'receipt' | 'adjustment' | 'issue' | 'return' | 'transfer'
+export type StockItemMovementKind = 'receipt' | 'adjustment' | 'issue' | 'return' | 'transfer' | 'sale' | 'production' | 'reversal'
 
 export interface StockItemMovement {
   id: number
@@ -216,9 +226,113 @@ export interface Dashboard {
   low_rolls: Roll[]
   recent_movements: Movement[]
   stock_value_cents?: number
+  sales_today?: { count: number; total_cents: number }
+  low_products: StockItem[]
 }
 
 export interface Paginated<T> {
   data: T[]
   meta: { current_page: number; last_page: number; total: number; per_page: number }
+}
+
+export interface ProductCategory {
+  id: number
+  name: string
+  unit: string
+  tracks_stock: boolean
+  sort_order: number
+}
+
+export interface Customer {
+  id: number
+  name: string
+  phone: string | null
+  stall: string
+  notes: string
+  active: boolean
+  /** Goods taken on "to pay" and not yet settled. */
+  owed_cents: number
+  last_sale_at: string | null
+  created_at: string | null
+}
+
+export type PaymentMethod = 'cash' | 'send_money' | 'paybill' | 'account'
+
+export interface SaleLine {
+  id: number
+  kind: 'product' | 'fabric'
+  stock_item_id: number | null
+  roll_id: number | null
+  description: string
+  quantity: number | null
+  length_cm: number | null
+  unit: string
+  asking_unit_cents: number | null
+  asking_total_cents: number | null
+  total_cents: number
+}
+
+export interface SalePayment {
+  id: number
+  method: PaymentMethod
+  method_label: string
+  amount_cents: number
+  mpesa_code: string | null
+  voided: boolean
+}
+
+export interface Sale {
+  id: number
+  number: string
+  customer?: { id: number; name: string; stall: string } | null
+  customer_name: string
+  total_cents: number
+  note: string
+  status: 'posted' | 'voided'
+  sold_by?: { id: number; name: string }
+  voided_by?: { id: number; name: string } | null
+  voided_at: string | null
+  void_reason: string
+  lines?: SaleLine[]
+  payments?: SalePayment[]
+  created_at: string | null
+}
+
+export interface DayBook {
+  date: string
+  weekday: string
+  sales: Sale[]
+  totals: {
+    total_cents: number
+    by_method: Record<PaymentMethod, number>
+    method_labels: Record<PaymentMethod, string>
+    sales_count: number
+    voided_count: number
+    missing_mpesa_codes: number
+    below_asking_cents: number
+  }
+}
+
+export interface PriceHint {
+  customer: string | null
+  customer_last: { unit_cents: number; quantity: number; total_cents: number; sold_at: string } | null
+  recent: { unit_cents: number; quantity: number; total_cents: number; sold_at: string }[]
+}
+
+export interface SewingBatch {
+  id: number
+  sewn_by?: { id: number; name: string }
+  recorded_by?: { id: number; name: string }
+  note: string
+  inputs?: { roll_id: number; roll_tag: string; fabric: string; used_cm: number }[]
+  outputs?: { stock_item_id: number; name: string; unit: string; quantity: number }[]
+  created_at: string | null
+}
+
+export interface SaleBody {
+  customer_id?: number | null
+  customer_name?: string
+  note?: string
+  lines: ({ stock_item_id: number; quantity: number; total_cents: number } | { roll_id: number; length_cm: number; total_cents: number })[]
+  payments: { method: PaymentMethod; amount_cents: number; mpesa_code?: string | null }[]
 }

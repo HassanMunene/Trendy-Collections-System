@@ -2,7 +2,14 @@ import { http } from './client'
 import type {
     Adjustment,
     AuditEvent,
+    Customer,
     Dashboard,
+    DayBook,
+    PriceHint,
+    ProductCategory,
+    Sale,
+    SaleBody,
+    SewingBatch,
     Fabric,
     Lookups,
     LookupType,
@@ -106,4 +113,36 @@ export const api = {
     stockItem: (id: number) =>
         http.get<{ data: StockItem; movements: StockItemMovement[] }>(`/stock-items/${id}`).then((r) => r.data),
     receiveStockItem: (body: Record<string, unknown>) => unwrap<StockItem>(http.post('/stock-items', body)),
+
+    restockItem: (id: number, body: { quantity: number; note?: string }) => unwrap<StockItem>(http.post(`/stock-items/${id}/receipts`, body)),
+    countItem: (id: number, body: { counted: number; reason: string }) => unwrap<StockItem>(http.post(`/stock-items/${id}/adjustments`, body)),
+
+    // What the shop sells
+    productCategories: () => unwrap<ProductCategory[]>(http.get('/product-categories')),
+    createProductCategory: (body: { name: string; unit: string; tracks_stock: boolean }) =>
+        unwrap<ProductCategory>(http.post('/product-categories', body)),
+    products: (params: { q?: string; category_id?: number; include_inactive?: boolean } = {}) =>
+        unwrap<StockItem[]>(http.get('/products', { params: { ...params, include_inactive: params.include_inactive ? 1 : undefined } })),
+    createProduct: (body: Record<string, unknown>) => unwrap<StockItem>(http.post('/products', body)),
+    updateProduct: (id: number, body: Record<string, unknown>) => unwrap<StockItem>(http.patch(`/products/${id}`, body)),
+
+    // Customers and counter sales
+    customers: (params: { q?: string; owing?: boolean } = {}) =>
+        unwrap<Customer[]>(http.get('/customers', { params: { q: params.q || undefined, owing: params.owing ? 1 : undefined } })),
+    customer: (id: number) => http.get<{ data: Customer; sales: Sale[] }>(`/customers/${id}`).then((r) => r.data),
+    createCustomer: (body: { name: string; phone?: string; stall?: string; notes?: string }) => unwrap<Customer>(http.post('/customers', body)),
+    updateCustomer: (id: number, body: { name: string; phone?: string; stall?: string; notes?: string; active?: boolean }) =>
+        unwrap<Customer>(http.patch(`/customers/${id}`, body)),
+    recordSale: (body: SaleBody) => unwrap<Sale>(http.post('/sales', body)),
+    sale: (id: number) => unwrap<Sale>(http.get(`/sales/${id}`)),
+    voidSale: (id: number, reason: string) => unwrap<Sale>(http.post(`/sales/${id}/void`, { reason })),
+    priceHint: (stockItemId: number, customerId?: number | null) =>
+        unwrap<PriceHint>(http.get('/sales/price-hint', { params: { stock_item_id: stockItemId, customer_id: customerId ?? undefined } })),
+    dayBook: (date?: string) => unwrap<DayBook>(http.get('/day-book', { params: { date } })),
+
+    // Sewing for the shelf
+    sewingBatches: (params: { sewn_by?: number; from?: string } = {}) => unwrap<SewingBatch[]>(http.get('/sewing-batches', { params })),
+    tailors: () => unwrap<{ id: number; name: string }[]>(http.get('/sewing-batches/tailors')),
+    recordSewing: (body: { sewn_by?: number; note?: string; inputs: { roll_id: number; used_cm: number }[]; outputs: { stock_item_id: number; quantity: number }[] }) =>
+        unwrap<SewingBatch>(http.post('/sewing-batches', body)),
 }

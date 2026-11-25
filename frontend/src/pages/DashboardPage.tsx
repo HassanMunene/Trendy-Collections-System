@@ -9,7 +9,6 @@ import {
     AlertTriangleIcon,
     AuditIcon,
     BanknoteIcon,
-    CheckCircleIcon,
     InboxIcon,
     RollIcon,
     TrendingUpIcon,
@@ -17,17 +16,8 @@ import {
 } from '../components/icons'
 import { Button, Card, EmptyState, ErrorNotice, Loading, Pill } from '../components/ui'
 import { cx } from '../lib/cx'
+import { quantityLabel } from '../lib/useCatalogue'
 import { formatKes, formatMetres, plural } from '../lib/units'
-
-/** Placeholder payments until the M-Pesa integration lands. */
-const demoTransactions = [
-    { id: 1, customer: 'Wanjiku M.', phone: '0712 ••• 678', amountCents: 325000, time: '10:42' },
-    { id: 2, customer: 'Brian O.', phone: '0723 ••• 145', amountCents: 480000, time: '10:18' },
-    { id: 3, customer: 'Amina K.', phone: '0734 ••• 902', amountCents: 160000, time: '09:55' },
-    { id: 4, customer: 'Peter N.', phone: '0701 ••• 331', amountCents: 280000, time: '09:12' },
-]
-
-const demoMadeTodayCents = demoTransactions.reduce((sum, tx) => sum + tx.amountCents, 0)
 
 function greeting() {
     const hour = Number(new Intl.DateTimeFormat('en-KE', { hour: 'numeric', hour12: false, timeZone: 'Africa/Nairobi' }).format(new Date()))
@@ -74,14 +64,14 @@ export function DashboardPage() {
                                 icon={BanknoteIcon}
                             />
                         )}
-                        {isSuperadmin && (
+                        {data.sales_today && (
                             <StatCard
-                                label="Made today"
-                                value={formatKes(demoMadeTodayCents)}
-                                note="M-Pesa sales · sample"
+                                label="Sold today"
+                                value={formatKes(data.sales_today.total_cents)}
+                                note={plural(data.sales_today.count, 'sale')}
+                                to="/day-book"
                                 icon={TrendingUpIcon}
                                 tone="success"
-                                badge="Demo"
                             />
                         )}
                         <StatCard
@@ -113,36 +103,20 @@ export function DashboardPage() {
                         />
                     </div>
 
-                    <div className="mt-4">
-                        <Card title="Recent transactions" action={<Pill tone="warn">Demo · M-Pesa soon</Pill>}>
-                            <ul className="divide-y divide-line-soft">
-                                {demoTransactions.map((tx) => (
-                                    <li key={tx.id} className="flex items-center gap-3 py-3">
-                                        <span className="grid size-9 flex-none place-items-center rounded-full bg-success-soft text-success">
-                                            <CheckCircleIcon size={18} />
-                                        </span>
-                                        <div className="min-w-0 flex-1">
-                                            <p className="truncate text-sm font-semibold text-plum">{tx.customer}</p>
-                                            <p className="text-xs text-ink-muted">
-                                                {tx.time} · {tx.phone}
-                                            </p>
-                                        </div>
-                                        <div className="text-right">
-                                            {isSuperadmin ? (
-                                                <span className="tabular block text-sm font-bold text-plum">{formatKes(tx.amountCents)}</span>
-                                            ) : (
-                                                <span className="block text-sm font-semibold text-success">Paid</span>
-                                            )}
-                                            <span className="block text-xs text-ink-muted">M-Pesa</span>
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                            <p className="mt-2 text-xs text-ink-muted">
-                                Sample transactions. M-Pesa will fill this in automatically once it is connected.
-                            </p>
-                        </Card>
-                    </div>
+                    {data.low_products.length > 0 && (
+                        <div className="mt-4">
+                            <Card title="Products running low" action={<Link to="/products" className="text-sm font-bold text-rose-dark">Products</Link>}>
+                                <ul className="divide-y divide-line-soft">
+                                    {data.low_products.map((p) => (
+                                        <li key={p.id} className="flex items-center justify-between gap-3 py-3">
+                                            <span className="truncate font-semibold text-plum">{p.name}</span>
+                                            <Pill tone="warn">{quantityLabel(p.quantity, p.unit)} left</Pill>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </Card>
+                        </div>
+                    )}
 
                     {data.active_rolls === 0 ? (
                         <div className="mt-4">

@@ -31,7 +31,8 @@ export function Drawer({
     const previous = document.activeElement as HTMLElement | null
     const overflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    panelRef.current?.focus()
+    // Keep focus on a field that asked for it (autoFocus); otherwise focus the panel itself.
+    if (!panelRef.current?.contains(document.activeElement)) panelRef.current?.focus()
     return () => {
       document.body.style.overflow = overflow
       previous?.focus?.()

@@ -14,3 +14,14 @@ dist/
 .idea/
 .vscode/
 .DS_Store
+
+/backend/.claude
+/backend/.codex
+# AI coding-assistant files (Laravel Boost skills, agent guidelines, MCP configs) — kept locally, not in git
+/backend/.agents/
+/backend/.junie/
+/backend/.claude/
+/backend/.mcp.json
+/backend/opencode.json
+/backend/AGENTS.md
+/backend/CLAUDE.md

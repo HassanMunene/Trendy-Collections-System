@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\StockItemMovementResource;
 use App\Http\Resources\StockItemResource;
 use App\Models\StockItem;
+use App\Services\StockItemCounter;
 use App\Services\StockItemReceiver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,7 +17,7 @@ use Illuminate\Validation\Rule;
 class StockItemController extends Controller
 {
     /** Units staff can type in the receive form. Free text would make stock meaningless. */
-    public const UNITS = ['pcs', 'm', 'kg', 'pack', 'box', 'set', 'roll'];
+    public const UNITS = ['pcs', 'm', 'kg', 'pack', 'box', 'set', 'roll', 'pair'];
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -24,10 +25,13 @@ class StockItemController extends Controller
             'q' => ['nullable', 'string', 'max:100'],
             'low' => ['nullable', 'boolean'],
             'status' => ['nullable', Rule::in(['active', 'all'])],
+            'kind' => ['nullable', Rule::in(['supplies', 'products', 'all'])],
         ]);
 
         $items = StockItem::query()
-            ->with('supplier')
+            ->with(['supplier', 'category', 'colour'])
+            ->when(($filters['kind'] ?? 'all') === 'supplies', fn ($q) => $q->supplies())
+            ->when(($filters['kind'] ?? 'all') === 'products', fn ($q) => $q->products())
             ->when(($filters['status'] ?? 'active') === 'active', fn ($q) => $q->where('active', true))
             ->when($filters['low'] ?? false, fn ($q) => $q->low())
             ->when($filters['q'] ?? null, function ($q, $term) {
@@ -44,7 +48,7 @@ class StockItemController extends Controller
 
     public function show(StockItem $stockItem): JsonResponse
     {
-        $stockItem->load(['supplier', 'receiver']);
+        $stockItem->load(['supplier', 'receiver', 'category', 'colour']);
         $movements = $stockItem->movements()->with('actor')->orderByDesc('id')->limit(100)->get();
 
         return response()->json([
@@ -79,5 +83,33 @@ class StockItemController extends Controller
 
         return (new StockItemResource($created->load(['supplier', 'receiver'])))
             ->response()->setStatusCode(201);
+    }
+
+    /** More of an item that already exists: bought-in rods, a delivery of pillows. */
+    public function receive(Request $request, StockItem $stockItem, StockItemCounter $counter): StockItemResource
+    {
+        Gate::authorize('receive-stock');
+        $data = $request->validate([
+            'quantity' => ['required', 'integer', 'min:1', 'max:10000000'],
+            'note' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $item = $counter->receive($request->user(), $stockItem, (int) $data['quantity'], (string) ($data['note'] ?? ''));
+
+        return new StockItemResource($item->load(['supplier', 'receiver', 'category', 'colour']));
+    }
+
+    /** Shelf count differs from the system: record what is really there, with a reason. */
+    public function adjust(Request $request, StockItem $stockItem, StockItemCounter $counter): StockItemResource
+    {
+        Gate::authorize('adjust-stock');
+        $data = $request->validate([
+            'counted' => ['required', 'integer', 'min:0', 'max:10000000'],
+            'reason' => ['required', 'string', 'max:500'],
+        ]);
+
+        $item = $counter->correct($request->user(), $stockItem, (int) $data['counted'], $data['reason']);
+
+        return new StockItemResource($item->load(['supplier', 'receiver', 'category', 'colour']));
     }
 }

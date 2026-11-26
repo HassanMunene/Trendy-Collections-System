@@ -18,7 +18,7 @@ class RolePermissionTest extends TestCase
 
         $response = $this->spa()->actingAs($owner)->getJson('/api/role-permissions')->assertOk();
 
-        $response->assertJsonCount(6, 'data.permissions')
+        $response->assertJsonCount(count(Permission::all()), 'data.permissions')
             ->assertJsonCount(5, 'data.roles')
             ->assertJsonPath('data.roles.0.key', 'owner')
             ->assertJsonPath('data.roles.0.locked', true)
@@ -34,12 +34,15 @@ class RolePermissionTest extends TestCase
         $permissions = fn (string $role) => $roles->firstWhere('key', $role)['permissions'];
 
         $this->assertEqualsCanonicalizing(
-            [Permission::MANAGE_CATALOGUE, Permission::RECEIVE_STOCK, Permission::ADJUST_STOCK, Permission::VIEW_COSTS],
+            [
+                Permission::MANAGE_CATALOGUE, Permission::RECEIVE_STOCK, Permission::ADJUST_STOCK, Permission::VIEW_COSTS,
+                Permission::SELL, Permission::VOID_SALES, Permission::RECORD_SEWING,
+            ],
             $permissions('manager'),
         );
-        $this->assertSame([], $permissions('cashier'));
-        $this->assertSame([], $permissions('cutter'));
-        $this->assertSame([], $permissions('tailor'));
+        $this->assertSame([Permission::SELL], $permissions('cashier'));
+        $this->assertSame([Permission::RECORD_SEWING], $permissions('cutter'));
+        $this->assertSame([Permission::RECORD_SEWING], $permissions('tailor'));
         $this->assertEqualsCanonicalizing(Permission::all(), $permissions('owner'));
     }
 

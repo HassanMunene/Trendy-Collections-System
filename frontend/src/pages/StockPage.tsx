@@ -20,8 +20,8 @@ export function StockPage() {
   const low = params.get('low') === '1'
 
   const query = useQuery({
-    queryKey: ['stock-items', { q, low, page }],
-    queryFn: () => api.stockItems({ q: q || undefined, low: low ? 1 : undefined, page }),
+    queryKey: ['stock-items', { q, low, page, kind: 'supplies' }],
+    queryFn: () => api.stockItems({ q: q || undefined, low: low ? 1 : undefined, page, kind: 'supplies' }),
     placeholderData: keepPreviousData,
   })
 
@@ -107,8 +107,8 @@ export function StockPage() {
   return (
     <>
       <PageHeader
-        title="Stock"
-        subtitle="Hangers, trims, lining and other shop stock that is not a fabric roll."
+        title="Supplies"
+        subtitle="Hangers, hooks, tape, lining and other things the shop uses. Curtains and other goods for sale are under Products."
         action={
           canReceive && (
             <Button onClick={openReceive}>

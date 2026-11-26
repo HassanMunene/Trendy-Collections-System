@@ -11,7 +11,7 @@ class StockItemMovement extends Model
 {
     public const UPDATED_AT = null;
 
-    protected $fillable = ['stock_item_id', 'change_qty', 'balance_after', 'kind', 'note', 'actor_id'];
+    protected $fillable = ['stock_item_id', 'change_qty', 'balance_after', 'kind', 'reference_type', 'reference_id', 'note', 'actor_id'];
 
     protected function casts(): array
     {

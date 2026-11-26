@@ -4,7 +4,8 @@ import { useIdleLogout } from '../auth/useIdleLogout'
 import { useLivePermissions } from '../auth/useLivePermissions'
 import { useCan, useCurrentUser } from '../auth/useMe'
 import { Avatar } from './Avatar'
-import { AuditIcon, BoxIcon, HomeIcon, PlusGlyphIcon, PlusIcon, RollIcon, SwatchIcon, TeamIcon, TruckIcon, UserIcon, type IconProps } from './icons'
+import { AuditIcon, BookIcon, BoxIcon, CartIcon, DotsIcon, HomeIcon, NeedleIcon, PeopleIcon, PlusGlyphIcon, PlusIcon, RollIcon, SwatchIcon, TagIcon, TeamIcon, TruckIcon, UserIcon, type IconProps } from './icons'
+import { Drawer } from './Drawer'
 import { cx } from '../lib/cx'
 import { ReceiveChoiceDrawer } from './ReceiveChoiceDrawer'
 import { ReceiveRollDrawer } from './ReceiveRollDrawer'
@@ -35,6 +36,10 @@ export function AppShell() {
     const canManageStaff = useCan('manage_staff')
     const canManageCatalogue = useCan('manage_catalogue')
     const canViewAudit = useCan('view_audit')
+    const canSell = useCan('sell')
+    const canSew = useCan('record_sewing')
+    const canAdjust = useCan('adjust_stock')
+    const [moreOpen, setMoreOpen] = useState(false)
     const [params, setParams] = useSearchParams()
     const { pathname } = useLocation()
     const [userMenuOpen, setUserMenuOpen] = useState(false)
@@ -54,18 +59,27 @@ export function AppShell() {
 
     const items: NavItem[] = [
         { to: '/', label: 'Home', short: 'Home', icon: HomeIcon, end: true, show: true },
-        { to: '/rolls', label: 'Rolls & stock', short: 'Rolls', icon: RollIcon, end: true, show: true },
+        { to: '/sell', label: 'Sell', short: 'Sell', icon: CartIcon, show: canSell },
+        { to: '/day-book', label: 'Day book', short: 'Day book', icon: BookIcon, show: canSell },
+        { to: '/products', label: 'Products', short: 'Products', icon: TagIcon, show: true },
+        { to: '/sewing', label: 'Sewing', short: 'Sewing', icon: NeedleIcon, show: canSew || canAdjust },
+        { to: '/customers', label: 'Customers', short: 'Customers', icon: PeopleIcon, show: canSell },
+        { to: '/rolls', label: 'Rolls', short: 'Rolls', icon: RollIcon, end: true, show: true },
         { to: RECEIVE_PATH, label: 'Receive stock', short: 'Receive', icon: PlusIcon, show: canReceive },
         { to: '/fabrics', label: 'Fabrics', short: 'Fabrics', icon: SwatchIcon, show: true },
-        { to: '/stock', label: 'Stock', short: 'Stock', icon: BoxIcon, show: true },
+        { to: '/stock', label: 'Supplies', short: 'Supplies', icon: BoxIcon, show: true },
         { to: '/suppliers', label: 'Suppliers', short: 'Suppliers', icon: TruckIcon, show: canManageCatalogue },
         { to: '/staff', label: 'Users & roles', short: 'Users', icon: TeamIcon, show: canManageStaff },
         { to: '/audit', label: 'Audit log', short: 'Audit', icon: AuditIcon, show: canViewAudit },
         { to: '/account', label: 'My account', short: 'Me', icon: UserIcon, show: true },
     ].filter((i) => i.show)
 
-    // Phones get at most five tabs; Staff is reachable from "Me" and Receive from the header button.
-    const mobileItems = items.filter((i) => i.to !== '/staff' && i.to !== RECEIVE_PATH).slice(0, 5)
+    // Phones get at most five tabs: the first four that this person uses most, then "More" for the rest.
+    // Receive is the header button and "My account" sits behind the avatar.
+    const phoneCandidates = items.filter((i) => i.to !== RECEIVE_PATH && i.to !== '/account')
+    const mobileItems = phoneCandidates.length <= 5 ? phoneCandidates : phoneCandidates.slice(0, 4)
+    const moreItems = phoneCandidates.length <= 5 ? [] : phoneCandidates.slice(4)
+    const moreActive = moreItems.some((i) => pathname === i.to || pathname.startsWith(i.to + '/'))
 
     // Header title: the longest nav path that matches the current location (so /rolls/123 -> "Rolls & stock").
     const pageTitle =
@@ -178,7 +192,7 @@ export function AppShell() {
             <nav
                 aria-label="Main"
                 className="fixed inset-x-0 bottom-0 z-40 grid border-t border-line-soft bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_18px_#3517230f] md:hidden"
-                style={{ gridTemplateColumns: `repeat(${mobileItems.length}, minmax(0, 1fr))` }}
+                style={{ gridTemplateColumns: `repeat(${mobileItems.length + (moreItems.length > 0 ? 1 : 0)}, minmax(0, 1fr))` }}
             >
                 {mobileItems.map((item) => (
                     <NavLink
@@ -197,7 +211,39 @@ export function AppShell() {
                         {item.short}
                     </NavLink>
                 ))}
+                {moreItems.length > 0 && (
+                    <button
+                        type="button"
+                        onClick={() => setMoreOpen(true)}
+                        aria-haspopup="dialog"
+                        className={cx('flex min-h-16 flex-col items-center justify-center gap-0.5 text-[11px] font-bold', moreActive ? 'text-rose' : 'text-ink-muted', focusRing)}
+                    >
+                        <DotsIcon />
+                        More
+                    </button>
+                )}
             </nav>
+
+            {moreOpen && (
+                <Drawer onClose={() => setMoreOpen(false)} title="More">
+                    <nav aria-label="More pages" className="grid gap-1">
+                        {moreItems.map((item) => (
+                            <NavLink
+                                key={item.to}
+                                to={item.to}
+                                end={item.end}
+                                onClick={() => setMoreOpen(false)}
+                                className={({ isActive }) =>
+                                    cx('flex min-h-12 items-center gap-3 rounded-xl px-3 font-semibold', isActive ? 'bg-blush-200 text-plum' : 'text-plum hover:bg-blush-100', focusRing)
+                                }
+                            >
+                                <item.icon />
+                                {item.label}
+                            </NavLink>
+                        ))}
+                    </nav>
+                </Drawer>
+            )}
 
             {params.get('receive') === '1' && (
                 <ReceiveChoiceDrawer

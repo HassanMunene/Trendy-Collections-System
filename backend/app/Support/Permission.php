@@ -17,6 +17,12 @@ final class Permission
 
     public const VIEW_COSTS = 'view_costs';
 
+    public const SELL = 'sell';
+
+    public const VOID_SALES = 'void_sales';
+
+    public const RECORD_SEWING = 'record_sewing';
+
     /**
      * Permissions an owner may hand to another role. Managing accounts and reading the
      * audit trail always stay with owners, so a manager cannot promote themselves.
@@ -26,6 +32,9 @@ final class Permission
         self::RECEIVE_STOCK,
         self::ADJUST_STOCK,
         self::VIEW_COSTS,
+        self::SELL,
+        self::VOID_SALES,
+        self::RECORD_SEWING,
     ];
 
     public const OWNER_ONLY = [self::MANAGE_STAFF, self::VIEW_AUDIT];
@@ -50,6 +59,21 @@ final class Permission
         self::VIEW_COSTS => [
             'label' => 'See costs & supplier details',
             'description' => 'View purchase costs, supplier names and contact numbers.',
+            'assignable' => true,
+        ],
+        self::SELL => [
+            'label' => 'Sell at the counter',
+            'description' => 'Record sales and payments, add customers and read the day book.',
+            'assignable' => true,
+        ],
+        self::VOID_SALES => [
+            'label' => 'Void sales',
+            'description' => 'Cancel a recorded sale with a reason. The stock goes back and the sale stays on record.',
+            'assignable' => true,
+        ],
+        self::RECORD_SEWING => [
+            'label' => 'Record sewing',
+            'description' => 'Record fabric used and curtains, sheers and cases sewn into stock.',
             'assignable' => true,
         ],
         self::MANAGE_STAFF => [

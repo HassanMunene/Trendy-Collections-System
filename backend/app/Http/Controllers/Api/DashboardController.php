@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\MovementResource;
 use App\Http\Resources\RollResource;
+use App\Http\Resources\StockItemResource;
 use App\Models\Roll;
+use App\Models\Sale;
+use App\Models\StockItem;
 use App\Models\StockMovement;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -46,6 +49,17 @@ class DashboardController extends Controller
                 StockMovement::with(['actor', 'roll'])->orderByDesc('id')->limit(10)->get()
             )->resolve(),
         ];
+
+        if (Gate::allows('sell')) {
+            $today = Sale::posted()->where('created_at', '>=', $startOfDay);
+            $data['sales_today'] = [
+                'count' => (clone $today)->count(),
+                'total_cents' => (int) (clone $today)->sum('total_cents'),
+            ];
+        }
+        $data['low_products'] = StockItemResource::collection(
+            StockItem::products()->low()->with(['category', 'colour'])->orderBy('quantity')->limit(10)->get()
+        )->resolve();
 
         if (Gate::allows('view-costs')) {
             // Value of what is left, at each roll's purchase cost per metre.

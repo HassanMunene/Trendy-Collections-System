@@ -10,6 +10,7 @@ const KIND_LABEL: Record<MovementKind, string> = {
   sale: 'Sold',
   return: 'Returned',
   transfer: 'Moved',
+  reversal: 'Sale voided',
 }
 
 export function MovementRow({ movement: m, showRoll = false }: { movement: Movement; showRoll?: boolean }) {

@@ -6,7 +6,9 @@ use App\Enums\Role;
 use App\Models\Colour;
 use App\Models\FabricCategory;
 use App\Models\MaterialType;
+use App\Models\ProductCategory;
 use App\Models\Roll;
+use App\Models\StockItem;
 use App\Models\Texture;
 use App\Models\User;
 use App\Support\RoleCatalog;
@@ -65,5 +67,18 @@ abstract class TestCase extends BaseTestCase
         $id = $this->receiveRoll($as, $overrides)->assertCreated()->json('data.id');
 
         return Roll::findOrFail($id);
+    }
+
+    /** A product in one of the seeded categories ("Window curtain", "Pillow case"...), created as the owner. */
+    protected function product(string $category, ?string $colour = null, array $overrides = []): StockItem
+    {
+        $owner = User::factory()->owner()->create();
+        $id = $this->spa()->actingAs($owner)->postJson('/api/products', array_merge([
+            'product_category_id' => ProductCategory::where('name', $category)->firstOrFail()->id,
+            'colour_id' => $colour ? Colour::firstOrCreate(['name' => $colour])->id : null,
+            'price_cents' => 220000,
+        ], $overrides))->assertCreated()->json('data.id');
+
+        return StockItem::findOrFail($id);
     }
 }

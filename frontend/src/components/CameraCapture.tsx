@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
  *  The caller must render <video ref={video} style={{ objectFit: 'cover' }} />.
  *  Call capture() to take a photo; it returns a data URL or throws.
  */
-export function useCameraCapture() {
+function useCameraCapture() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null)

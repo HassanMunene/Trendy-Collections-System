@@ -1,35 +1,33 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router'
+import { useParams, useSearchParams } from 'react-router'
 import { toProblem, type ApiProblem } from '../api/client'
 import { api } from '../api/endpoints'
 import { useCan } from '../auth/useMe'
 import { FabricFields } from '../components/FabricFields'
-import { draftToFabricPayload, emptyFabricDraft, fabricToDraft, type FabricDraft } from '../lib/fabricDraft'
+import { draftToFabricPayload, fabricToDraft, type FabricDraft } from '../lib/fabricDraft'
 import { Button, ButtonLink, Card, DetailList, ErrorNotice, Loading, Notice, PageHeader } from '../components/ui'
 import { formatKes, formatMetres } from '../lib/units'
 import { useLookups } from '../lib/useLookups'
 
-/** /fabrics/new and /fabrics/:id (view for everyone, edit for owner/manager). */
+/** /fabrics/:id: view for everyone, edit for owner/manager. New fabrics are added in a drawer on the list. */
 export function FabricFormPage() {
   const params = useParams()
-  const isNew = !params.id
   const id = Number(params.id)
   const canManage = useCan('manage_catalogue')
   const canReceive = useCan('receive_stock')
-  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const qc = useQueryClient()
   const lookups = useLookups()
-  const fabric = useQuery({ queryKey: ['fabric', id], queryFn: () => api.fabric(id), enabled: !isNew })
-  const [draft, setDraft] = useState<FabricDraft>(emptyFabricDraft)
-  const [editing, setEditing] = useState(isNew)
+  const fabric = useQuery({ queryKey: ['fabric', id], queryFn: () => api.fabric(id) })
+  const [draft, setDraft] = useState<FabricDraft | null>(null)
+  const [editing, setEditing] = useState(false)
   const [problem, setProblem] = useState<ApiProblem | null>(null)
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
 
   if (lookups.isLoading || fabric.isLoading) return <Loading />
-  if (!lookups.data || (!isNew && !fabric.data))
+  if (!lookups.data || !fabric.data)
     return (
       <div className="pt-6">
         <ErrorNotice problem={toProblem(lookups.error ?? fabric.error)} onRetry={() => { lookups.refetch(); fabric.refetch() }} />
@@ -38,6 +36,7 @@ export function FabricFormPage() {
 
   async function save(e: FormEvent) {
     e.preventDefault()
+    if (!draft) return
     const { payload, errors } = draftToFabricPayload(draft)
     if (Object.keys(errors).length) {
       setProblem({ status: 422, message: 'Please fix the highlighted fields.', fields: errors })
@@ -46,11 +45,10 @@ export function FabricFormPage() {
     setBusy(true)
     setProblem(null)
     try {
-      const result = isNew ? await api.createFabric(payload) : await api.updateFabric(id, payload)
+      const result = await api.updateFabric(id, payload)
       qc.invalidateQueries({ queryKey: ['fabrics'] })
       qc.setQueryData(['fabric', result.id], result)
       qc.invalidateQueries({ queryKey: ['rolls'] })
-      if (isNew) navigate(`/fabrics/${result.id}`, { replace: true })
       setEditing(false)
       setSaved(true)
     } catch (err) {
@@ -76,7 +74,7 @@ export function FabricFormPage() {
 
   const f = fabric.data
 
-  if (!editing && f) {
+  if (!editing || !draft) {
     return (
       <>
         <PageHeader
@@ -149,7 +147,7 @@ export function FabricFormPage() {
 
   return (
     <>
-      <PageHeader back={isNew ? { to: '/fabrics', label: 'Fabrics' } : undefined} title={isNew ? 'New fabric' : `Edit ${f?.code}`} />
+      <PageHeader title={`Edit ${f.code}`} />
       <form onSubmit={save} className="grid gap-4 lg:max-w-3xl" noValidate>
         <Card>
           <FabricFields draft={draft} onChange={setDraft} lookups={lookups.data} errors={problem?.fields ?? {}} />
@@ -157,9 +155,9 @@ export function FabricFormPage() {
         {problem && <ErrorNotice problem={problem} />}
         <div className="flex gap-2">
           <Button type="submit" busy={busy}>
-            {isNew ? 'Add fabric' : 'Save changes'}
+            Save changes
           </Button>
-          <Button type="button" variant="ghost" onClick={() => (isNew ? navigate('/fabrics') : (setEditing(false), setProblem(null)))}>
+          <Button type="button" variant="ghost" onClick={() => { setEditing(false); setProblem(null) }}>
             Cancel
           </Button>
         </div>

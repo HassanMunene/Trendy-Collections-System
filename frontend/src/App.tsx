@@ -8,6 +8,7 @@ import { ME_KEY, useMe } from './auth/useMe'
 import { AppShell } from './components/AppShell'
 import { ErrorNotice, Loading } from './components/ui'
 import { AccountPage } from './pages/AccountPage'
+import { ApprovalsPage } from './pages/ApprovalsPage'
 import { AuditPage } from './pages/AuditPage'
 import { ChangePasswordPage } from './pages/ChangePasswordPage'
 import { CustomersPage } from './pages/CustomersPage'
@@ -17,7 +18,9 @@ import { FabricFormPage } from './pages/FabricFormPage'
 import { FabricsPage } from './pages/FabricsPage'
 import { LoginPage } from './pages/LoginPage'
 import { NotFoundPage } from './pages/NotFoundPage'
+import { OrdersPage } from './pages/OrdersPage'
 import { ProductsPage } from './pages/ProductsPage'
+import { ReportsPage } from './pages/ReportsPage'
 import { RollDetailPage } from './pages/RollDetailPage'
 import { RollsPage } from './pages/RollsPage'
 import { SellPage } from './pages/SellPage'
@@ -111,6 +114,23 @@ const router = createBrowserRouter([
                         element: (
                             <RequirePermission permission="sell">
                                 <CustomersPage />
+                            </RequirePermission>
+                        ),
+                    },
+                    {
+                        path: 'approvals',
+                        element: (
+                            <RequirePermission permission="sell">
+                                <ApprovalsPage />
+                            </RequirePermission>
+                        ),
+                    },
+                    { path: 'orders', element: <OrdersPage /> },
+                    {
+                        path: 'reports',
+                        element: (
+                            <RequirePermission permission="view_reports">
+                                <ReportsPage />
                             </RequirePermission>
                         ),
                     },

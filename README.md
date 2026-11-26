@@ -60,6 +60,7 @@ Re-ordered on 22 Nov 2026 after reading the shop's sales book (`docs/08-SALES-BO
 
 1. ✅ Foundation + stock: logins and roles, staff, fabric catalogue, receiving rolls, balances, history, count corrections, dashboard.
 2. ✅ The sales book replacement: products (window curtain = set, door curtain = the "half", sheers, cases, rods...), sewing into stock, counter sales with bargained prices, payments (cash / Send money / Paybill / to pay) with M-Pesa codes, customers, day book with totals per method, voiding.
-3. Trade accounts: settling "to pay" debts, goods on approval / sale-or-return, returns, day-end cash close.
-4. Custom orders (light): fabric by the metre, deposits and balances, ready / collected.
-5. M-Pesa matching for Paybill 492438 (I&M) via the bank's notifications or statement import; hosting with HTTPS and backups before real use. Full workroom later if needed.
+3. ✅ Trade accounts: paying off "to pay" debts, goods on approval (one week), returns with refunds or account credit, expenses, day-end cash count.
+4. ✅ Custom orders: fabric by the metre from rolls, products and priced work; deposit and part-payments; taken → in work (fabric cut) → ready → collected with the balance (or on "to pay"); cancelling with a refund.
+5. ✅ Reports: sales over any dates with a daily or monthly chart, best sellers, sales by kind, money in and out by method, expenses, custom orders, staff sales, rough profit (for those who see costs) and who owes the shop.
+6. M-Pesa matching for Paybill 492438 (I&M) via the bank's notifications or statement import; hosting with HTTPS and backups before real use. Full workroom later if needed.

@@ -188,6 +188,15 @@ export const BanknoteIcon = (p: IconProps) => (
     </Svg>
 )
 
+export const ChartIcon = (p: IconProps) => (
+    <Svg {...p}>
+        <path d="M4 20h16" />
+        <path d="M7 16v-5" />
+        <path d="M12 16V6" />
+        <path d="M17 16v-8" />
+    </Svg>
+)
+
 export const TrendingUpIcon = (p: IconProps) => (
     <Svg {...p}>
         <path d="m3 16 5-5 4 4 7-8" />
@@ -266,5 +275,18 @@ export const DotsIcon = (p: IconProps) => (
 export const MinusIcon = ({ size = 20, ...p }: IconProps) => (
     <Svg size={size} {...p}>
         <path d="M5 12h14" />
+    </Svg>
+)
+
+export const HandoverIcon = (p: IconProps) => (
+    <Svg {...p}>
+        <path d="M4 8h12l-3-3M20 16H8l3 3" />
+    </Svg>
+)
+
+export const ClipboardIcon = (p: IconProps) => (
+    <Svg {...p}>
+        <rect x="5" y="4" width="14" height="17" rx="2" />
+        <path d="M9 4.5V3h6v1.5M9 10h6M9 14h6M9 18h3" />
     </Svg>
 )

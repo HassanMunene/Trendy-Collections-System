@@ -1,20 +1,27 @@
 <?php
 
+use App\Http\Controllers\Api\AccountPaymentController;
+use App\Http\Controllers\Api\ApprovalController;
 use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CashCountController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DayBookController;
+use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\FabricController;
 use App\Http\Controllers\Api\LookupController;
+use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductCategoryController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\RolePermissionController;
 use App\Http\Controllers\Api\RollAdjustmentController;
 use App\Http\Controllers\Api\RollController;
 use App\Http\Controllers\Api\SaleController;
+use App\Http\Controllers\Api\SaleReturnController;
 use App\Http\Controllers\Api\SessionController;
 use App\Http\Controllers\Api\SewingBatchController;
 use App\Http\Controllers\Api\StaffController;
@@ -98,6 +105,29 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/sales/{sale}', [SaleController::class, 'show']);
         Route::post('/sales/{sale}/void', [SaleController::class, 'void']);
         Route::get('/day-book', DayBookController::class);
+        Route::get('/reports', ReportController::class);
+
+        // Trade accounts: paying off "to pay", returns, expenses, closing the day, goods on approval.
+        Route::post('/customers/{customer}/payments', [AccountPaymentController::class, 'store']);
+        Route::post('/account-payments/{payment}/void', [AccountPaymentController::class, 'void']);
+        Route::post('/sales/{sale}/returns', [SaleReturnController::class, 'store']);
+        Route::post('/expenses', [ExpenseController::class, 'store']);
+        Route::post('/expenses/{expense}/void', [ExpenseController::class, 'void']);
+        Route::post('/cash-counts', [CashCountController::class, 'store']);
+        Route::get('/approvals', [ApprovalController::class, 'index']);
+        Route::post('/approvals', [ApprovalController::class, 'store']);
+        Route::get('/approvals/{approval}', [ApprovalController::class, 'show']);
+        Route::post('/approvals/{approval}/settle', [ApprovalController::class, 'settle']);
+
+        // Custom (made-to-measure) orders.
+        Route::get('/orders', [OrderController::class, 'index']);
+        Route::post('/orders', [OrderController::class, 'store']);
+        Route::get('/orders/{order}', [OrderController::class, 'show']);
+        Route::post('/orders/{order}/payments', [OrderController::class, 'pay']);
+        Route::post('/orders/{order}/start', [OrderController::class, 'start']);
+        Route::post('/orders/{order}/ready', [OrderController::class, 'ready']);
+        Route::post('/orders/{order}/collect', [OrderController::class, 'collect']);
+        Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel']);
 
         // Sewing for the shelf: roll metres in, finished goods out.
         Route::get('/sewing-batches', [SewingBatchController::class, 'index']);

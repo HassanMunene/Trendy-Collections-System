@@ -23,6 +23,14 @@ final class Permission
 
     public const RECORD_SEWING = 'record_sewing';
 
+    public const TAKE_RETURNS = 'take_returns';
+
+    public const RECORD_EXPENSES = 'record_expenses';
+
+    public const CLOSE_DAY = 'close_day';
+
+    public const VIEW_REPORTS = 'view_reports';
+
     /**
      * Permissions an owner may hand to another role. Managing accounts and reading the
      * audit trail always stay with owners, so a manager cannot promote themselves.
@@ -35,6 +43,10 @@ final class Permission
         self::SELL,
         self::VOID_SALES,
         self::RECORD_SEWING,
+        self::TAKE_RETURNS,
+        self::RECORD_EXPENSES,
+        self::CLOSE_DAY,
+        self::VIEW_REPORTS,
     ];
 
     public const OWNER_ONLY = [self::MANAGE_STAFF, self::VIEW_AUDIT];
@@ -67,13 +79,33 @@ final class Permission
             'assignable' => true,
         ],
         self::VOID_SALES => [
-            'label' => 'Void sales',
-            'description' => 'Cancel a recorded sale with a reason. The stock goes back and the sale stays on record.',
+            'label' => 'Void sales, payments & expenses',
+            'description' => 'Cancel a recorded sale, account payment or expense with a reason. It stays on record, crossed out.',
             'assignable' => true,
         ],
         self::RECORD_SEWING => [
             'label' => 'Record sewing',
             'description' => 'Record fabric used and curtains, sheers and cases sewn into stock.',
+            'assignable' => true,
+        ],
+        self::TAKE_RETURNS => [
+            'label' => 'Take returns',
+            'description' => 'Accept goods back from a sale and give cash, M-Pesa or account credit.',
+            'assignable' => true,
+        ],
+        self::RECORD_EXPENSES => [
+            'label' => 'Record expenses',
+            'description' => 'Record money paid out: transport, tailor pay, food and so on.',
+            'assignable' => true,
+        ],
+        self::CLOSE_DAY => [
+            'label' => 'Count the cash at closing',
+            'description' => 'Count the drawer at the end of the day and record any difference.',
+            'assignable' => true,
+        ],
+        self::VIEW_REPORTS => [
+            'label' => 'See reports',
+            'description' => 'Sales, best sellers, money in and out, expenses and who owes the shop, over any dates.',
             'assignable' => true,
         ],
         self::MANAGE_STAFF => [

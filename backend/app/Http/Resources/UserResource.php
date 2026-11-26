@@ -46,6 +46,10 @@ class UserResource extends JsonResource
                 'sell' => Gate::forUser($user)->allows('sell'),
                 'void_sales' => Gate::forUser($user)->allows('void-sales'),
                 'record_sewing' => Gate::forUser($user)->allows('record-sewing'),
+                'take_returns' => Gate::forUser($user)->allows('take-returns'),
+                'record_expenses' => Gate::forUser($user)->allows('record-expenses'),
+                'close_day' => Gate::forUser($user)->allows('close-day'),
+                'view_reports' => Gate::forUser($user)->allows('view-reports'),
             ],
         ];
     }

@@ -4,7 +4,7 @@ import { useIdleLogout } from '../auth/useIdleLogout'
 import { useLivePermissions } from '../auth/useLivePermissions'
 import { useCan, useCurrentUser } from '../auth/useMe'
 import { Avatar } from './Avatar'
-import { AuditIcon, BookIcon, BoxIcon, CartIcon, DotsIcon, HomeIcon, NeedleIcon, PeopleIcon, PlusGlyphIcon, PlusIcon, RollIcon, SwatchIcon, TagIcon, TeamIcon, TruckIcon, UserIcon, type IconProps } from './icons'
+import { AuditIcon, BookIcon, BoxIcon, CartIcon, ChartIcon, ClipboardIcon, DotsIcon, HandoverIcon, HomeIcon, NeedleIcon, PeopleIcon, PlusGlyphIcon, PlusIcon, RollIcon, SwatchIcon, TagIcon, TeamIcon, TruckIcon, UserIcon, type IconProps } from './icons'
 import { Drawer } from './Drawer'
 import { cx } from '../lib/cx'
 import { ReceiveChoiceDrawer } from './ReceiveChoiceDrawer'
@@ -36,6 +36,7 @@ export function AppShell() {
     const canManageStaff = useCan('manage_staff')
     const canManageCatalogue = useCan('manage_catalogue')
     const canViewAudit = useCan('view_audit')
+    const canViewReports = useCan('view_reports')
     const canSell = useCan('sell')
     const canSew = useCan('record_sewing')
     const canAdjust = useCan('adjust_stock')
@@ -61,9 +62,12 @@ export function AppShell() {
         { to: '/', label: 'Home', short: 'Home', icon: HomeIcon, end: true, show: true },
         { to: '/sell', label: 'Sell', short: 'Sell', icon: CartIcon, show: canSell },
         { to: '/day-book', label: 'Day book', short: 'Day book', icon: BookIcon, show: canSell },
+        { to: '/orders', label: 'Custom orders', short: 'Orders', icon: ClipboardIcon, show: canSell || canSew },
         { to: '/products', label: 'Products', short: 'Products', icon: TagIcon, show: true },
+        { to: '/approvals', label: 'On approval', short: 'Approval', icon: HandoverIcon, show: canSell },
         { to: '/sewing', label: 'Sewing', short: 'Sewing', icon: NeedleIcon, show: canSew || canAdjust },
         { to: '/customers', label: 'Customers', short: 'Customers', icon: PeopleIcon, show: canSell },
+        { to: '/reports', label: 'Reports', short: 'Reports', icon: ChartIcon, show: canViewReports },
         { to: '/rolls', label: 'Rolls', short: 'Rolls', icon: RollIcon, end: true, show: true },
         { to: RECEIVE_PATH, label: 'Receive stock', short: 'Receive', icon: PlusIcon, show: canReceive },
         { to: '/fabrics', label: 'Fabrics', short: 'Fabrics', icon: SwatchIcon, show: true },
@@ -91,9 +95,13 @@ export function AppShell() {
     return (
         <div className="min-h-dvh md:grid md:grid-cols-[232px_minmax(0,1fr)]">
             {/* Laptop / tablet sidebar */}
-            <aside className="sticky top-0 hidden h-dvh flex-col bg-plum px-3 py-6 text-blush-100 md:flex">
+            <aside className="sticky top-0 hidden h-dvh flex-col overflow-hidden bg-plum px-3 py-6 text-blush-100 md:flex">
                 <Brand light />
-                <nav aria-label="Main" className="mt-8 grid gap-1">
+                {/* Only the menu scrolls when it is taller than the screen; brand and account stay put. */}
+                <nav
+                    aria-label="Main"
+                    className="-mx-1 mt-6 grid min-h-0 flex-1 content-start gap-1 overflow-y-auto overscroll-contain px-1 py-1 [scrollbar-color:rgb(255_255_255/0.25)_transparent] [scrollbar-width:thin]"
+                >
                     {items.map((item) =>
                         item.to === RECEIVE_PATH ? (
                             <button
@@ -133,7 +141,7 @@ export function AppShell() {
                     aria-haspopup="dialog"
                     aria-expanded={userMenuOpen}
                     className={cx(
-                        'mt-auto flex w-full items-center gap-2.5 rounded-lg border-t border-white/15 px-2 pt-4 text-left text-sm transition hover:opacity-90',
+                        'mt-3 flex w-full shrink-0 items-center gap-2.5 rounded-lg border-t border-white/15 px-2 pt-4 text-left text-sm transition hover:opacity-90',
                         focusRingLight,
                     )}
                 >

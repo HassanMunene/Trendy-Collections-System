@@ -7,16 +7,18 @@ use App\Http\Resources\MovementResource;
 use App\Http\Resources\RollResource;
 use App\Http\Resources\StockItemResource;
 use App\Models\Roll;
-use App\Models\Sale;
 use App\Models\StockItem;
 use App\Models\StockMovement;
+use App\Services\ShopToday;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
+/** Home screen: today's money and what needs attention (ShopToday), then stock. */
 class DashboardController extends Controller
 {
-    public function __invoke(): JsonResponse
+    public function __invoke(Request $request, ShopToday $shop): JsonResponse
     {
         $byCategory = DB::table('rolls')
             ->join('fabrics', 'fabrics.id', '=', 'rolls.fabric_id')
@@ -50,13 +52,6 @@ class DashboardController extends Controller
             )->resolve(),
         ];
 
-        if (Gate::allows('sell')) {
-            $today = Sale::posted()->where('created_at', '>=', $startOfDay);
-            $data['sales_today'] = [
-                'count' => (clone $today)->count(),
-                'total_cents' => (int) (clone $today)->sum('total_cents'),
-            ];
-        }
         $data['low_products'] = StockItemResource::collection(
             StockItem::products()->low()->with(['category', 'colour'])->orderBy('quantity')->limit(10)->get()
         )->resolve();
@@ -68,6 +63,6 @@ class DashboardController extends Controller
                 ->value('v');
         }
 
-        return response()->json(['data' => $data]);
+        return response()->json(['data' => [...$data, ...$shop->build($request->user())]]);
     }
 }

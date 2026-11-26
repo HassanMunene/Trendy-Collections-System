@@ -37,10 +37,11 @@ class RolePermissionTest extends TestCase
             [
                 Permission::MANAGE_CATALOGUE, Permission::RECEIVE_STOCK, Permission::ADJUST_STOCK, Permission::VIEW_COSTS,
                 Permission::SELL, Permission::VOID_SALES, Permission::RECORD_SEWING,
+                Permission::TAKE_RETURNS, Permission::RECORD_EXPENSES, Permission::CLOSE_DAY, Permission::VIEW_REPORTS,
             ],
             $permissions('manager'),
         );
-        $this->assertSame([Permission::SELL], $permissions('cashier'));
+        $this->assertEqualsCanonicalizing([Permission::SELL, Permission::RECORD_EXPENSES, Permission::CLOSE_DAY], $permissions('cashier'));
         $this->assertSame([Permission::RECORD_SEWING], $permissions('cutter'));
         $this->assertSame([Permission::RECORD_SEWING], $permissions('tailor'));
         $this->assertEqualsCanonicalizing(Permission::all(), $permissions('owner'));

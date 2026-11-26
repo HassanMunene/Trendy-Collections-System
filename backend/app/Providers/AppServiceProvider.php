@@ -36,6 +36,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('sell', fn (User $u) => RolePermissions::allows($u, Permission::SELL));
         Gate::define('void-sales', fn (User $u) => RolePermissions::allows($u, Permission::VOID_SALES));
         Gate::define('record-sewing', fn (User $u) => RolePermissions::allows($u, Permission::RECORD_SEWING));
+        Gate::define('take-returns', fn (User $u) => RolePermissions::allows($u, Permission::TAKE_RETURNS));
+        Gate::define('record-expenses', fn (User $u) => RolePermissions::allows($u, Permission::RECORD_EXPENSES));
+        Gate::define('close-day', fn (User $u) => RolePermissions::allows($u, Permission::CLOSE_DAY));
+        Gate::define('view-reports', fn (User $u) => RolePermissions::allows($u, Permission::VIEW_REPORTS));
         Gate::define('view-audit', fn (User $u) => RolePermissions::allows($u, Permission::VIEW_AUDIT));
 
         RateLimiter::for('login', function (Request $request) {
